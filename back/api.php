@@ -22,7 +22,8 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 function jsonResponse($data, $statusCode = 200)
 {
     http_response_code($statusCode);
-    echo json_encode($data);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -75,9 +76,13 @@ $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uriSegments = explode('/', trim($requestUri, '/'));
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 
-$resource = $uriSegments[1] ?? ''; 
-$id = $uriSegments[2] ?? null;      
-$action = $uriSegments[3] ?? null; 
+// Debug: Imprimir la URI para verificar
+error_log("Request URI: " . $requestUri);
+error_log("URI Segments: " . json_encode($uriSegments));
+
+$resource = $uriSegments[0] ?? '';  // Cambiado de [1] a [0]
+$id = $uriSegments[1] ?? null;       // Cambiado de [2] a [1]
+$action = $uriSegments[2] ?? null;   // Cambiado de [3] a [2]
 
 $input = json_decode(file_get_contents('php://input'), true);
 

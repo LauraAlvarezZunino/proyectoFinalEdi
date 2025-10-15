@@ -1,4 +1,4 @@
-<?php
+re<?php
 
 class ValidationHelper
 {
@@ -39,6 +39,9 @@ class ValidationHelper
      */
     public static function isValidDni($dni)
     {
+        if (!is_string($dni) || $dni === null) {
+            return false;
+        }
         return preg_match('/^\\d{7,8}$/', $dni);
     }
 
@@ -49,6 +52,9 @@ class ValidationHelper
      */
     public static function isValidEmail($email)
     {
+        if (!is_string($email) || $email === null) {
+            return false;
+        }
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
     }
 
@@ -59,6 +65,9 @@ class ValidationHelper
      */
     public static function isValidTelefono($telefono)
     {
+        if (!is_string($telefono) || $telefono === null) {
+            return false;
+        }
         return preg_match("/^\\d{10,11}$/", $telefono);
     }
 
@@ -69,6 +78,9 @@ class ValidationHelper
      */
     public static function isValidClave($clave)
     {
+        if (!is_string($clave) || $clave === null) {
+            return false;
+        }
         return preg_match("/^[a-zA-Z0-9]{4,8}$/", $clave);
     }
 

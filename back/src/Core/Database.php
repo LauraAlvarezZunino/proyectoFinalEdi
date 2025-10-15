@@ -5,10 +5,10 @@ class Database {
     private $conn;
 
     private function __construct() {
-        $host = 'localhost'; 
+         $host = 'localhost'; 
         $db   = 'room_service'; 
-        $user = 'roomservice';
-        $pass = 'maria';
+        $user = 'root';
+        $pass = 'admin123';
         $charset = 'utf8mb4';
 
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

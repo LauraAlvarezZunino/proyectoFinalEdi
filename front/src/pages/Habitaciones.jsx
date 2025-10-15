@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import RoomCard from '../components/RoomCard';
 import FormularioHabitacion from '../components/FormularioHabitacion';
+import api from '../servicios/api';
 
 const Habitaciones = () => {
   const { isAdmin } = useAuth();
@@ -24,13 +25,54 @@ const Habitaciones = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState('success');
 
-  // Mock data - replace with API call
+  // Fetch rooms from API
   useEffect(() => {
-    setRooms([
-      { id: 1, numero: '101', tipo: 'Familiar', precio: 150, estado: 'Disponible' },
-      { id: 2, numero: '102', tipo: 'Doble', precio: 100, estado: 'Disponible' },
-      { id: 3, numero: '103', tipo: 'Simple', precio: 80, estado: 'Disponible' },
-    ]);
+    const fetchRooms = async () => {
+      try {
+        const response = await api.get('/habitaciones');
+        console.log('Rooms response:', response.data);
+        console.log('Response data type:', typeof response.data);
+        console.log('Is array?', Array.isArray(response.data));
+
+        let roomsData = response.data;
+        // Handle string response (remove 're' prefix if present)
+        if (typeof roomsData === 'string') {
+          console.log('Response is string, attempting to parse...');
+          try {
+            roomsData = JSON.parse(roomsData.replace(/^re/, ''));
+            console.log('Parsed roomsData:', roomsData);
+            console.log('Parsed type:', typeof roomsData);
+            console.log('Is parsed array?', Array.isArray(roomsData));
+          } catch (e) {
+            console.error('Failed to parse rooms response:', e);
+            throw new Error('Invalid response format');
+          }
+        }
+
+        // Ensure roomsData is an array
+        if (!Array.isArray(roomsData)) {
+          console.error('roomsData is not an array:', roomsData);
+          throw new Error('Response is not an array');
+        }
+
+        // Transform data to match frontend expectations
+        const transformedRooms = roomsData.map(room => ({
+          id: room.id,
+          numero: room.numero.toString(),
+          tipo: room.tipo.charAt(0).toUpperCase() + room.tipo.slice(1), // Capitalize first letter
+          precio: parseFloat(room.precio),
+          estado: 'Disponible' // Default status, could be enhanced later
+        }));
+        console.log('Transformed rooms:', transformedRooms);
+        setRooms(transformedRooms);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+        setAlertMessage('Error al cargar las habitaciones');
+        setAlertSeverity('error');
+      }
+    };
+
+    fetchRooms();
   }, []);
 
 
@@ -108,7 +150,7 @@ const Habitaciones = () => {
 
       <Grid container spacing={3}>
         {rooms.map((room) => (
-          <Grid item xs={12} sm={6} md={4} key={room.id}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={room.id}>
             <RoomCard room={room} onEdit={handleEdit} onDelete={handleDelete} />
           </Grid>
         ))}

@@ -7,9 +7,10 @@ import HotelIcon from '@mui/icons-material/Hotel'; // Para la capacidad
 import EditIcon from '@mui/icons-material/Edit'; // Para el botón de editar
 import DeleteIcon from '@mui/icons-material/Delete'; // Para el botón de eliminar
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Función auxiliar para renderizar el botón de acción
-const renderActions = (room, isAdmin, onEdit, onDelete) => {
+const renderActions = (room, isAdmin, onEdit, onDelete, handleReserve) => {
   if (isAdmin) {
     return (
       <>
@@ -40,6 +41,7 @@ const renderActions = (room, isAdmin, onEdit, onDelete) => {
       size="small"
       color="primary"
       variant="contained"
+      onClick={handleReserve}
     >
       Reservar
     </Button>
@@ -52,11 +54,27 @@ const renderActions = (room, isAdmin, onEdit, onDelete) => {
 };
 
 export default function RoomCard({ room, onEdit, onDelete }) {
-  const { isAdmin } = useAuth();
-  
+  const { isAdmin, user } = useAuth();
+  const navigate = useNavigate();
+
   // Asumiendo que 'room.capacidad' existe y es el número de huéspedes
-  const capacidad = room.capacidad || 2; 
+  const capacidad = room.capacidad || 2;
   const isAvailable = room.estado === 'Disponible';
+
+  const handleReserve = () => {
+    // Navigate to reservations page with room pre-selected
+    navigate('/reservas', {
+      state: {
+        selectedRoom: room,
+        prefillData: {
+          habitacionId: room.id,
+          usuarioId: user?.id,
+          fechaInicio: '',
+          fechaFin: '',
+        }
+      }
+    });
+  };
 
   return (
     <Card sx={{ 
@@ -89,7 +107,7 @@ export default function RoomCard({ room, onEdit, onDelete }) {
 
       </CardContent>
       <CardActions sx={{ justifyContent: 'flex-end', borderTop: '1px solid rgba(0, 0, 0, 0.12)' }}>
-        {renderActions(room, isAdmin, onEdit, onDelete)}
+        {renderActions(room, isAdmin, onEdit, onDelete, handleReserve)}
       </CardActions>
     </Card>
   );

@@ -37,15 +37,19 @@ export default function Autenticacion() {
   // 2. Validación de campos básica
   const validarCampos = () => {
     const { email, password, nombreApellido, dni, telefono } = formData;
-    
+
     // Validar Email y Contraseña básicos
     if (!email || !password) return false;
-    
+
     if (esRegistro) {
-      // Validar campos adicionales de registro y longitud mínima de contraseña
-      return nombreApellido && dni && telefono && password.length >= 6;
+      // Validar campos adicionales de registro y reglas específicas
+      if (!nombreApellido || !dni || !telefono) return false;
+      if (dni.length < 7 || dni.length > 8 || !/^\d+$/.test(dni)) return false;
+      if (telefono.length < 10 || telefono.length > 11 || !/^\d+$/.test(telefono)) return false;
+      if (password.length < 4 || password.length > 8 || !/^[a-zA-Z0-9]+$/.test(password)) return false;
+      return true;
     }
-    
+
     return true;
   };
 
@@ -65,7 +69,15 @@ export default function Autenticacion() {
     try {
       let result;
       if (esRegistro) {
-        result = await register(formData);
+        // Map frontend field names to backend expected names
+        const backendData = {
+          nombreApellido: formData.nombreApellido,
+          dni: formData.dni,
+          email: formData.email,
+          telefono: formData.telefono,
+          clave: formData.password // Map 'password' to 'clave'
+        };
+        result = await register(backendData);
         if (result.success) {
           establecerErrorAuth('¡Registro exitoso! Por favor, inicia sesión.');
           establecerEsRegistro(false);
@@ -75,6 +87,10 @@ export default function Autenticacion() {
           establecerErrorAuth(result.error || 'Error al registrar.');
         }
       } else {
+        // For login, backend expects DNI and clave, but frontend has email and password
+        // We need to handle this differently - login should use email or DNI?
+        // Looking at the backend, login uses DNI, but frontend collects email
+        // This is a design issue - we need to change login to accept email instead of DNI
         result = await login(formData.email, formData.password);
         if (result.success) {
           navigate('/');

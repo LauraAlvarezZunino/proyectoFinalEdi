@@ -13,12 +13,14 @@ import {
   Alert,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
 import api from '../servicios/api';
 import FormularioReserva from '../components/FormularioReserva';
 import TablaReservas from '../components/TablaReservas';
 
 const Reservas = () => {
   const { user, isAdmin } = useAuth();
+  const location = useLocation();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,40 +30,58 @@ const Reservas = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState('success');
 
-  // Mock data for demonstration - replace with API call
+  // Check if we have pre-filled data from room card navigation
   useEffect(() => {
-    // Simulate API delay
-    setTimeout(() => {
-      const mockReservations = [
-        {
-          id: 1,
-          habitacion: '101',
-          habitacionId: 1,
-          cliente: 'Juan Pérez',
-          usuarioId: 1,
-          fechaInicio: '2024-01-15',
-          fechaFin: '2024-01-17',
-          costo: 300,
-          estado: 'Confirmada'
-        },
-        {
-          id: 2,
-          habitacion: '102',
-          habitacionId: 2,
-          cliente: 'María García',
-          usuarioId: 2,
-          fechaInicio: '2024-01-20',
-          fechaFin: '2024-01-22',
-          costo: 200,
-          estado: 'Confirmada'
-        }
-      ];
+    if (location.state?.prefillData) {
+      setSelectedReservation(location.state.prefillData);
+      setOpen(true);
+      setIsEdit(false);
+    }
+  }, [location.state]);
 
-      // Filter reservations for non-admin users
-      const filteredData = isAdmin ? mockReservations : mockReservations.filter(res => res.usuarioId === user.id);
-      setReservations(filteredData);
-      setLoading(false);
-    }, 500);
+  // Fetch reservations from API
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        // For now, keep mock data since reservations API might not be fully implemented
+        // TODO: Replace with actual API call when reservations endpoint is ready
+        const mockReservations = [
+          {
+            id: 1,
+            habitacion: '101',
+            habitacionId: 1,
+            cliente: 'Juan Pérez',
+            usuarioId: 1,
+            fechaInicio: '2024-01-15',
+            fechaFin: '2024-01-17',
+            costo: 300,
+            estado: 'Confirmada'
+          },
+          {
+            id: 2,
+            habitacion: '102',
+            habitacionId: 2,
+            cliente: 'María García',
+            usuarioId: 2,
+            fechaInicio: '2024-01-20',
+            fechaFin: '2024-01-22',
+            costo: 200,
+            estado: 'Confirmada'
+          }
+        ];
+
+        // Filter reservations for non-admin users
+        const filteredData = isAdmin ? mockReservations : mockReservations.filter(res => res.usuarioId === user?.id);
+        setReservations(filteredData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching reservations:', error);
+        setError('Error al cargar las reservas');
+        setLoading(false);
+      }
+    };
+
+    fetchReservations();
   }, [isAdmin, user]);
 
 
@@ -186,11 +206,9 @@ const Reservas = () => {
         <Typography variant="h4" component="h1">
           Reservas
         </Typography>
-        {isAdmin && (
-          <Button variant="contained" color="primary" onClick={handleAdd}>
-            Nueva Reserva
-          </Button>
-        )}
+        <Button variant="contained" color="primary" onClick={handleAdd}>
+          {isAdmin ? 'Nueva Reserva' : 'Reservar Habitación'}
+        </Button>
       </Box>
 
       <Card>

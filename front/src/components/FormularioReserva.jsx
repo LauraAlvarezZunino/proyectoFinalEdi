@@ -1,27 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import api from '../servicios/api';
 
 const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false }) => {
   const [habitaciones, setHabitaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
 
-  // Mock data - replace with API calls
+  // Fetch real data from API
   useEffect(() => {
-    // Mock habitaciones
-    setHabitaciones([
-      { id: 1, numero: '101', tipo: 'Suite', estado: 'Disponible', precio: 150 },
-      { id: 2, numero: '102', tipo: 'Doble', estado: 'Disponible', precio: 100 },
-      { id: 3, numero: '103', tipo: 'Simple', estado: 'Disponible', precio: 80 },
-    ]);
+    const fetchData = async () => {
+      try {
+        // Fetch habitaciones
+        const roomsRes = await api.get('/habitaciones');
+        let roomsData = roomsRes.data;
+        if (typeof roomsData === 'string') {
+          roomsData = JSON.parse(roomsData.replace(/^re/, ''));
+        }
+        const transformedRooms = roomsData.map(room => ({
+          id: room.id,
+          numero: room.numero.toString(),
+          tipo: room.tipo.charAt(0).toUpperCase() + room.tipo.slice(1),
+          precio: parseFloat(room.precio),
+          estado: 'Disponible'
+        }));
+        setHabitaciones(transformedRooms);
 
-    // Mock usuarios (solo para admin)
-    if (isAdmin) {
-      setUsuarios([
-        { id: 1, nombreApellido: 'Juan Pérez' },
-        { id: 2, nombreApellido: 'María García' },
-        { id: 3, nombreApellido: 'Carlos López' },
-      ]);
-    }
+        // Fetch usuarios (solo para admin)
+        if (isAdmin) {
+          try {
+            const usersRes = await api.get('/usuarios');
+            let usersData = usersRes.data;
+            if (typeof usersData === 'string') {
+              usersData = JSON.parse(usersData.replace(/^re/, ''));
+            }
+            setUsuarios(usersData);
+          } catch (error) {
+            console.error('Error fetching users:', error);
+            // Fallback to empty array
+            setUsuarios([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Fallback to empty arrays
+        setHabitaciones([]);
+        setUsuarios([]);
+      }
+    };
+
+    fetchData();
   }, [isAdmin]);
 
   const calcularCosto = (habitacionId, fechaInicio, fechaFin) => {
@@ -73,19 +100,27 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
             value={reserva.habitacionId || ''}
             label="Habitación"
             onChange={onChange}
+            displayEmpty
           >
-            {habitaciones
+            <MenuItem value="">
+              <em>Seleccionar habitación</em>
+            </MenuItem>
+            {habitaciones.length > 0 ? habitaciones
               .filter(h => h.estado === 'Disponible' || (isEdit && reserva.habitacionId === h.id))
               .map((habitacion) => (
                 <MenuItem key={habitacion.id} value={habitacion.id}>
                   {habitacion.numero} - {habitacion.tipo} (${habitacion.precio}/noche)
                 </MenuItem>
-              ))}
+              )) : (
+              <MenuItem disabled>
+                <em>Cargando habitaciones...</em>
+              </MenuItem>
+            )}
           </Select>
         </FormControl>
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <TextField
           fullWidth
           id="fechaInicio"
@@ -95,12 +130,34 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
           value={reserva.fechaInicio || ''}
           onChange={onChange}
           required
-          InputLabelProps={{ shrink: true }}
-          inputProps={{ min: new Date().toISOString().split('T')[0] }}
+          InputLabelProps={{
+            shrink: true,
+            sx: {
+              backgroundColor: 'white',
+              px: 1,
+              transform: 'translate(14px, -6px) scale(0.75)' // Better positioning
+            }
+          }}
+          inputProps={{
+            min: new Date().toISOString().split('T')[0] // Prevent past dates
+          }}
+          sx={{
+            '& .MuiInputBase-root': {
+              backgroundColor: 'white',
+              '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                cursor: 'pointer',
+                opacity: 1
+              }
+            },
+            '& .MuiInputLabel-root': {
+              backgroundColor: 'white',
+              px: 1
+            }
+          }}
         />
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <TextField
           fullWidth
           id="fechaFin"
@@ -110,8 +167,30 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
           value={reserva.fechaFin || ''}
           onChange={onChange}
           required
-          InputLabelProps={{ shrink: true }}
-          inputProps={{ min: reserva.fechaInicio || new Date().toISOString().split('T')[0] }}
+          InputLabelProps={{
+            shrink: true,
+            sx: {
+              backgroundColor: 'white',
+              px: 1,
+              transform: 'translate(14px, -6px) scale(0.75)' // Better positioning
+            }
+          }}
+          inputProps={{
+            min: reserva.fechaInicio || new Date().toISOString().split('T')[0] // Min date is start date or today
+          }}
+          sx={{
+            '& .MuiInputBase-root': {
+              backgroundColor: 'white',
+              '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                cursor: 'pointer',
+                opacity: 1
+              }
+            },
+            '& .MuiInputLabel-root': {
+              backgroundColor: 'white',
+              px: 1
+            }
+          }}
         />
       </Grid>
 

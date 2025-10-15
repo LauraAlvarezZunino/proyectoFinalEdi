@@ -14,12 +14,14 @@ const FormularioRegistro = ({ formData, manejarCambioInput, errorAuth }) => {
         margin="normal" required fullWidth id="dni" label="DNI"
         autoComplete="off" name="dni" type="number"
         value={formData.dni} onChange={manejarCambioInput}
+        helperText="7-8 dígitos."
         error={!!errorAuth && !formData.dni}
       />
       <TextField
         margin="normal" required fullWidth id="telefono" label="Teléfono"
         autoComplete="tel" name="telefono" type="tel"
         value={formData.telefono} onChange={manejarCambioInput}
+        helperText="10-11 dígitos."
         error={!!errorAuth && !formData.telefono}
       />
     </>

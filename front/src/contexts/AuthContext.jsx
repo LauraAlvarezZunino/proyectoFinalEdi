@@ -17,45 +17,94 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (token) {
-      // Decode token or fetch user info
-      // Assuming token contains user info or we fetch from /me endpoint
-      // For now, mock user data
-      setUser({ id: 1, nombreApellido: 'Admin User', email: 'admin@example.com', esAdmin: true });
+    const userData = localStorage.getItem('userData');
+
+    if (token && userData) {
+      try {
+        const parsedUserData = JSON.parse(userData);
+        console.log('Restoring user data from localStorage:', parsedUserData);
+        setUser(parsedUserData);
+      } catch (e) {
+        console.error('Failed to parse stored user data:', e);
+        // Clear corrupted data
+        localStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
+      }
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    // Mock login for testing
-    if (email === 'admin@example.com' && password === 'admin') {
-      const mockUser = { id: 1, nombreApellido: 'Admin User', dni: '12345678', email: 'admin@example.com', telefono: '123456789', esAdmin: true };
-      const mockToken = 'mock-jwt-token';
-      localStorage.setItem('authToken', mockToken);
-      setUser(mockUser);
-      return { success: true };
-    } else if (email === 'user@example.com' && password === 'user') {
-      const mockUser = { id: 2, nombreApellido: 'Common User', dni: '87654321', email: 'user@example.com', telefono: '987654321', esAdmin: false };
-      const mockToken = 'mock-jwt-token-user';
-      localStorage.setItem('authToken', mockToken);
-      setUser(mockUser);
-      return { success: true };
-    } else {
-      return { success: false, error: 'Invalid credentials' };
+    try {
+      console.log('Attempting login with:', { email, password: '***' });
+      // Call the real backend API for login
+      const response = await api.post('/autenticacion/inicio-sesion', {
+        email: email, // Backend expects email for login
+        clave: password // Map password to clave
+      });
+
+      console.log('Login response:', response.data);
+      const data = response.data;
+      console.log('Data type:', typeof data);
+      if (typeof data === 'string') {
+        console.log('Response is string, trying to parse as JSON');
+        try {
+          const parsedData = JSON.parse(data.replace(/^re/, ''));
+          console.log('Parsed data:', parsedData);
+          if (parsedData && typeof parsedData === 'object' && parsedData.token) {
+            console.log('Login successful, setting user data');
+            console.log('User is_admin from token:', parsedData.is_admin);
+            const userData = {
+              id: parsedData.user_id,
+              nombreApellido: 'User',
+              email: email,
+              esAdmin: parsedData.is_admin === true || parsedData.is_admin === 1
+            };
+            localStorage.setItem('authToken', parsedData.token);
+            localStorage.setItem('userData', JSON.stringify(userData));
+            setUser(userData);
+            console.log('User set with esAdmin:', userData.esAdmin);
+            return { success: true };
+          }
+        } catch (e) {
+          console.error('Failed to parse response:', e);
+        }
+      } else if (data && typeof data === 'object' && data.token) {
+        console.log('Login successful, setting user data');
+        console.log('User is_admin from token:', data.is_admin);
+        const userData = {
+          id: data.user_id,
+          nombreApellido: 'User',
+          email: email,
+          esAdmin: data.is_admin === true || data.is_admin === 1
+        };
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userData', JSON.stringify(userData));
+        setUser(userData);
+        console.log('User set with esAdmin:', userData.esAdmin);
+        return { success: true };
+      }
+      console.log('No token in response or invalid data format');
+      return { success: false, error: 'No token received' };
+    } catch (error) {
+      console.error('Login error:', error);
+      console.error('Error response:', error.response?.data);
+      return { success: false, error: error.response?.data?.error || 'Login failed' };
     }
   };
 
   const register = async (userData) => {
     try {
       const response = await api.post('/autenticacion/registro', userData);
-      return { success: true };
+      return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Registration failed' };
+      return { success: false, error: error.response?.data?.error || 'Registration failed' };
     }
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
     setUser(null);
   };
 
@@ -66,6 +115,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     isAdmin: user?.esAdmin || false,
+    // Debug: Add function to check current user status
+    debugUser: () => console.log('Current user:', user, 'isAdmin:', user?.esAdmin)
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

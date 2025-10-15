@@ -14,7 +14,7 @@ const FormularioLogin = ({ formData, manejarCambioInput, errorAuth, esRegistro }
         margin="normal" required fullWidth name="password" label="Contraseña"
         type="password" id="password" autoComplete={esRegistro ? 'new-password' : 'current-password'}
         value={formData.password} onChange={manejarCambioInput}
-        helperText={esRegistro && 'Mínimo 6 caracteres.'}
+        helperText={esRegistro && '4-8 caracteres alfanuméricos.'}
         error={!!errorAuth && !formData.password}
       />
     </>

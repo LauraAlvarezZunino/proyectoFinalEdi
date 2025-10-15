@@ -31,8 +31,28 @@ class AuthController {
         $telefono = $data['telefono'] ?? null;
         $clave = $data['clave'] ?? null;
 
-        if (!ValidationHelper::isValidDni($dni) || !ValidationHelper::isValidEmail($email) || !ValidationHelper::isValidTelefono($telefono) || !ValidationHelper::isValidClave($clave) || empty($nombreApellido)) {
-            jsonResponse(['error' => 'Datos de registro incompletos o inválidos.'], 400);
+        // Debug: Log the received data
+        error_log("Registration data received: " . json_encode($data));
+
+        if (!ValidationHelper::isValidDni($dni)) {
+            error_log("Invalid DNI: $dni");
+            jsonResponse(['error' => 'DNI inválido. Debe tener 7-8 dígitos.'], 400);
+        }
+        if (!ValidationHelper::isValidEmail($email)) {
+            error_log("Invalid email: $email");
+            jsonResponse(['error' => 'Email inválido.'], 400);
+        }
+        if (!ValidationHelper::isValidTelefono($telefono)) {
+            error_log("Invalid telefono: $telefono");
+            jsonResponse(['error' => 'Teléfono inválido. Debe tener 10-11 dígitos.'], 400);
+        }
+        if (!ValidationHelper::isValidClave($clave)) {
+            error_log("Invalid clave: $clave");
+            jsonResponse(['error' => 'Clave inválida. Debe tener 4-8 caracteres alfanuméricos.'], 400);
+        }
+        if (empty($nombreApellido)) {
+            error_log("Empty nombreApellido");
+            jsonResponse(['error' => 'Nombre y apellido son requeridos.'], 400);
         }
 
         if ($this->usuarioRepository->obtenerUsuarioPorDni($dni) || $this->usuarioRepository->obtenerUsuarioPorEmail($email)) {
@@ -48,19 +68,30 @@ class AuthController {
 
     // Lógica del handleLogin original (¡con JWT!)
     public function login($data) {
-        $dni = $data['dni'] ?? null;
+        $email = $data['email'] ?? null;
         $clave = $data['clave'] ?? null;
 
-        if (empty($dni) || empty($clave)) {
-            jsonResponse(['error' => 'DNI y clave son requeridos.'], 400);
+        // Debug: Log the received login data
+        error_log("Login data received: " . json_encode($data));
+
+        if (empty($email) || empty($clave)) {
+            jsonResponse(['error' => 'Email y clave son requeridos.'], 400);
         }
 
-        $usuario = $this->usuarioRepository->autenticarUsuario($dni, $clave);
-
+        // First get user by email, then verify password
+        $usuario = $this->usuarioRepository->obtenerUsuarioPorEmail($email);
+        error_log("User found: " . ($usuario ? 'yes' : 'no'));
         if ($usuario) {
+            error_log("Stored hash: " . $usuario->getClave());
+            error_log("Input clave: " . $clave);
+            error_log("Password verify result: " . (password_verify($clave, $usuario->getClave()) ? 'true' : 'false'));
+            error_log("User esAdmin: " . ($usuario->getEsAdmin() ? 'true' : 'false'));
+        }
+        if ($usuario && password_verify($clave, $usuario->getClave())) {
+            error_log("Login successful, generating JWT");
             $issuedAt = time();
             $expirationTime = $issuedAt + (60 * 60 * 2); // 2 horas de validez
-            
+
             $payload = [
                 'iat' => $issuedAt,
                 'exp' => $expirationTime,
@@ -71,15 +102,19 @@ class AuthController {
             ];
 
             $jwt = JWT::encode($payload, JWT_SECRET_KEY, 'HS256');
+            error_log("JWT generated successfully");
 
-            jsonResponse([
+            $response = [
                 'message' => 'Inicio de sesión exitoso.',
                 'token' => $jwt,
                 'user_id' => $usuario->getId(),
                 'is_admin' => $usuario->getEsAdmin()
-            ], 200);
+            ];
+            error_log("Sending response: " . json_encode($response));
+            jsonResponse($response, 200);
         } else {
-            jsonResponse(['error' => 'DNI o clave incorrectos.'], 401);
+            error_log("Login failed - user not found or password incorrect");
+            jsonResponse(['error' => 'Email o clave incorrectos.'], 401);
         }
     }
 }
