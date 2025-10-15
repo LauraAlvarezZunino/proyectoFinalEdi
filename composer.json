@@ -1,0 +1,20 @@
+{
+    "name": "laura/roomservice",
+    "description": "sistema de reservas",
+    "type": "project",
+    "require": {
+        "slim/psr7": "^1.7",
+        "vlucas/phpdotenv": "^5.6",
+        "monolog/monolog": "^3.9",
+        "respect/validation": "^2.4",
+        "phpmailer/phpmailer": "^6.11",
+        "firebase/php-jwt": "^6.11"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Laura\\Roomservice\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}

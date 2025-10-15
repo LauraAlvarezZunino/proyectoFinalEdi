@@ -1,0 +1,1 @@
+Marilu, para probarlo, php -S localhost:8080 -t y la ruta donde lo tengas  (la mia es /home/lau/Escritorio/edi3/RoomService2.0-main/, el puerto puede ser otro numero) , con la base de datos conectada y al postman
