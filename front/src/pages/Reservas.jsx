@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -11,10 +11,14 @@ import {
   Button,
   Box,
   Alert,
+  CircularProgress, // Importado para el estado de carga
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
-import api from '../servicios/api';
+// import api from '../services/api'; // Ya no es necesario aquí, se usa en reservaService
+
+// 1. Importar el nuevo servicio
+import * as reservaService from '../services/reservaService'; 
 import FormularioReserva from '../components/FormularioReserva';
 import TablaReservas from '../components/TablaReservas';
 
@@ -23,72 +27,64 @@ const Reservas = () => {
   const location = useLocation();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState('success');
 
-  // Check if we have pre-filled data from room card navigation
+  // --- Función de Alerta Centralizada ---
+  const displayAlert = (message, severity = 'success') => {
+    setAlertMessage(message);
+    setAlertSeverity(severity);
+    setTimeout(() => setAlertMessage(''), 3000);
+  };
+
+  // --- Lógica de Carga de Datos (API) ---
+  // Usamos useCallback para memoizar y usarlo en useEffect y después de guardar/cancelar
+  const fetchReservasData = useCallback(async () => {
+    // Solo cargamos si tenemos datos de usuario necesarios
+    if (!user || (!isAdmin && !user.id)) return; 
+
+    setLoading(true);
+    try {
+      // 2. Llamada al servicio
+      const data = await reservaService.fetchReservations(user.id, isAdmin);
+      setReservations(data);
+    } catch (error) {
+      console.error('Error fetching reservations:', error);
+      displayAlert(error.message || 'Error al cargar las reservas', 'error');
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAdmin, user]); 
+
+  // 3. Carga inicial de datos
+  useEffect(() => {
+    fetchReservasData();
+  }, [fetchReservasData]);
+
+  // 4. Manejo de datos precargados desde la navegación
   useEffect(() => {
     if (location.state?.prefillData) {
-      setSelectedReservation(location.state.prefillData);
+      setSelectedReservation({
+        ...location.state.prefillData,
+        // Asegurar que el usuarioId esté seteado al crear desde otra vista
+        usuarioId: isAdmin ? location.state.prefillData.usuarioId || '' : user?.id,
+      });
       setOpen(true);
       setIsEdit(false);
     }
-  }, [location.state]);
-
-  // Fetch reservations from API
-  useEffect(() => {
-    const fetchReservations = async () => {
-      try {
-        // For now, keep mock data since reservations API might not be fully implemented
-        // TODO: Replace with actual API call when reservations endpoint is ready
-        const mockReservations = [
-          {
-            id: 1,
-            habitacion: '101',
-            habitacionId: 1,
-            cliente: 'Juan Pérez',
-            usuarioId: 1,
-            fechaInicio: '2024-01-15',
-            fechaFin: '2024-01-17',
-            costo: 300,
-            estado: 'Confirmada'
-          },
-          {
-            id: 2,
-            habitacion: '102',
-            habitacionId: 2,
-            cliente: 'María García',
-            usuarioId: 2,
-            fechaInicio: '2024-01-20',
-            fechaFin: '2024-01-22',
-            costo: 200,
-            estado: 'Confirmada'
-          }
-        ];
-
-        // Filter reservations for non-admin users
-        const filteredData = isAdmin ? mockReservations : mockReservations.filter(res => res.usuarioId === user?.id);
-        setReservations(filteredData);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching reservations:', error);
-        setError('Error al cargar las reservas');
-        setLoading(false);
-      }
-    };
-
-    fetchReservations();
-  }, [isAdmin, user]);
+  }, [location.state, isAdmin, user?.id]);
 
 
+  // --- Manejo del Diálogo ---
   const handleAdd = () => {
     setSelectedReservation({
       habitacionId: '',
-      usuarioId: isAdmin ? '' : user.id,
+      // Si no es admin, el usuarioId es el suyo automáticamente
+      usuarioId: isAdmin ? '' : user?.id, 
       fechaInicio: '',
       fechaFin: '',
     });
@@ -99,7 +95,7 @@ const Reservas = () => {
   const handleEdit = (reservation) => {
     setSelectedReservation({
       ...reservation,
-      habitacionId: reservation.habitacionId || '', // Ensure habitacionId exists
+      habitacionId: reservation.habitacionId || '',
     });
     setIsEdit(true);
     setOpen(true);
@@ -111,85 +107,75 @@ const Reservas = () => {
     setIsEdit(false);
   };
 
-  const handleSave = async () => {
-    if (!selectedReservation) return;
-
-    try {
-      let response;
-      if (isEdit) {
-        response = await api.put(`/api.php/reservas/${selectedReservation.id}`, {
-          fechaInicio: selectedReservation.fechaInicio,
-          fechaFin: selectedReservation.fechaFin,
-          habitacionId: selectedReservation.habitacionId,
-        });
-        setAlertMessage('Reserva actualizada exitosamente');
-      } else {
-        response = await api.post('/api.php/reservas', {
-          fechaInicio: selectedReservation.fechaInicio,
-          fechaFin: selectedReservation.fechaFin,
-          habitacionId: selectedReservation.habitacionId,
-          usuarioId: selectedReservation.usuarioId,
-        });
-        setAlertMessage('Reserva creada exitosamente');
-      }
-
-      console.log('Reservation saved:', response.data);
-      setAlertSeverity('success');
-      setTimeout(() => setAlertMessage(''), 3000);
-
-      // Refresh reservations list
-      // For now, just close modal - in production you'd refetch
-      handleClose();
-    } catch (err) {
-      console.error('Error saving reservation:', err);
-      setAlertMessage('Error al guardar la reserva');
-      setAlertSeverity('error');
-      setTimeout(() => setAlertMessage(''), 3000);
-    }
-  };
-
-  const handleCancel = async (id) => {
-    if (window.confirm('¿Estás seguro de que quieres cancelar esta reserva?')) {
-      try {
-        const response = await api.delete(`/api.php/reservas/${id}`);
-        console.log('Reservation cancelled:', response.data);
-
-        setReservations(reservations.filter(res => res.id !== id));
-        setAlertMessage('Reserva cancelada exitosamente');
-        setAlertSeverity('success');
-        setTimeout(() => setAlertMessage(''), 3000);
-      } catch (err) {
-        console.error('Error cancelling reservation:', err);
-        setAlertMessage('Error al cancelar la reserva');
-        setAlertSeverity('error');
-        setTimeout(() => setAlertMessage(''), 3000);
-      }
-    }
-  };
-
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setSelectedReservation(prev => ({ ...prev, [name]: value }));
   };
 
+  // --- Lógica de Guardar (API) ---
+  const handleSave = async () => {
+    if (!selectedReservation || !selectedReservation.fechaInicio || !selectedReservation.habitacionId) {
+      displayAlert('Faltan campos obligatorios.', 'warning');
+      return;
+    }
+    
+    // Filtramos solo los campos necesarios para la API
+    const dataToSend = {
+      fechaInicio: selectedReservation.fechaInicio,
+      fechaFin: selectedReservation.fechaFin,
+      habitacionId: selectedReservation.habitacionId,
+      // Solo incluimos usuarioId si estamos creando o si es un admin editando una reserva ajena
+      ...(selectedReservation.usuarioId && { usuarioId: selectedReservation.usuarioId }),
+    };
+
+    try {
+      if (isEdit) {
+        await reservaService.updateReservation(selectedReservation.id, dataToSend);
+        displayAlert('Reserva actualizada exitosamente');
+      } else {
+        // Al crear, se debe incluir el usuarioId si no se incluyó en dataToSend
+        if (!dataToSend.usuarioId && user?.id) {
+            dataToSend.usuarioId = user.id;
+        }
+        await reservaService.createReservation(dataToSend);
+        displayAlert('Reserva creada exitosamente');
+      }
+
+      handleClose();
+      // Refrescar los datos de la tabla desde el servidor
+      fetchReservasData(); 
+    } catch (err) {
+      console.error('Error saving reservation:', err);
+      displayAlert(err.message || 'Error al guardar la reserva', 'error');
+    }
+  };
+
+  // --- Lógica de Cancelar (API) ---
+  const handleCancel = async (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres cancelar esta reserva?')) {
+      return;
+    }
+    
+    try {
+      await reservaService.cancelReservation(id);
+      displayAlert('Reserva cancelada exitosamente');
+      
+      // Refrescar los datos de la tabla desde el servidor
+      fetchReservasData(); 
+    } catch (err) {
+      console.error('Error cancelling reservation:', err);
+      displayAlert(err.message || 'Error al cancelar la reserva', 'error');
+    }
+  };
+
+
   if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 2 }}>
-          Reservas
-        </Typography>
-        <Typography>Cargando reservas...</Typography>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="lg">
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 2 }}>
-          Reservas
-        </Typography>
-        <Typography color="error">Error al cargar reservas: {error}</Typography>
+      <Container maxWidth="lg" sx={{ pt: 4 }}>
+        <Box display="flex" justifyContent="center" alignItems="center" height={200}>
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>Cargando reservas...</Typography>
+        </Box>
       </Container>
     );
   }
@@ -227,9 +213,6 @@ const Reservas = () => {
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
-        disableEnforceFocus
-        disableAutoFocus
-        disableRestoreFocus
       >
         <DialogTitle>{isEdit ? 'Editar Reserva' : 'Nueva Reserva'}</DialogTitle>
         <DialogContent>
@@ -239,6 +222,8 @@ const Reservas = () => {
               onChange={handleFormChange}
               isEdit={isEdit}
               isAdmin={isAdmin}
+              // Pasar el ID del usuario actual para el control interno del formulario
+              currentUserId={user?.id}
             />
           )}
         </DialogContent>

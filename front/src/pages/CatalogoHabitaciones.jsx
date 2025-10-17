@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   AppBar, Toolbar, Typography, Button, Container, Grid, 
-  CircularProgress, Alert, // Alert para mostrar errores
+  CircularProgress, Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
-
-import api from '../servicios/api';
-import TarjetaHabitacion from '../componentes/TarjetaHabitacion'; 
+//para no autenticados
+// 1. Importar el servicio de habitaciones
+import * as habitacionService from '../services/habitacionService'; 
+// import api from '../servicios/api'; // Ya no se necesita
+import TarjetaHabitacion from '../components/TarjetaHabitacion'; 
 
 export default function ListadoHabitaciones() {
   const [habitaciones, establecerHabitaciones] = useState([]);
@@ -15,28 +17,27 @@ export default function ListadoHabitaciones() {
   const [errorCarga, establecerErrorCarga] = useState(null); 
   const navigate = useNavigate();
 
-  const fetchHabitaciones = async () => {
+  // Encapsulamos la lógica de carga usando useCallback
+  const fetchHabitaciones = useCallback(async () => {
     establecerEstadoCarga(true);
     establecerErrorCarga(null);
     try {
-      const response = await api.get('/habitaciones'); 
-      
-      // Asume que la respuesta es un array, si tu API envuelve los datos, 
-      // usa: establecerHabitaciones(response.data.data);
-      const dataArray = Array.isArray(response.data) ? response.data : response.data.data;
-      establecerHabitaciones(dataArray || []);
+      // 2. Llamada simplificada al servicio
+      const data = await habitacionService.fetchRooms();
+      establecerHabitaciones(data || []);
 
     } catch (error) {
       console.error("Error al cargar habitaciones:", error);
-      establecerErrorCarga("Error al cargar la lista. El servidor no responde.");
+      // Usar el mensaje de error del servicio o un fallback
+      establecerErrorCarga(error.message || "Error al cargar la lista. El servidor no responde.");
     } finally {
       establecerEstadoCarga(false);
     }
-  };
+  }, []); // El array de dependencias está vacío porque no depende de props o estados mutables
 
   useEffect(() => {
     fetchHabitaciones();
-  }, []);
+  }, [fetchHabitaciones]); // Ejecutar solo cuando fetchHabitaciones cambie (sólo al montar)
 
   return (  
     <>
@@ -69,8 +70,9 @@ export default function ListadoHabitaciones() {
           </Grid>
         ) : (
           <Grid container spacing={4}>
-            {Array.isArray(habitaciones) && habitaciones.length > 0 ? (
+            {habitaciones.length > 0 ? (
                 habitaciones.map((habitacion) => (
+                    // Asegúrate de que TarjetaHabitacion maneje correctamente las props
                     <TarjetaHabitacion 
                         key={habitacion.id} 
                         habitacion={habitacion} 

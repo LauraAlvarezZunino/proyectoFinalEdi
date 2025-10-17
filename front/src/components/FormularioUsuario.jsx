@@ -10,7 +10,7 @@ const FormularioUsuario = ({ usuario, onChange, isEdit = false, isAdmin = false 
           id="nombreApellido"
           name="nombreApellido"
           label="Nombre y Apellido"
-          value={usuario.nombreApellido || ''}
+          value={usuario.nombre_apellido || ''}
           onChange={onChange}
           required
         />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
-import api from '../servicios/api';
+import api from '../services/api';
 
 const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false }) => {
   const [habitaciones, setHabitaciones] = useState([]);

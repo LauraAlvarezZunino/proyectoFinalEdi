@@ -1,4 +1,5 @@
 <?php
+// src/Repositories/UsuarioRepository.php
 
 // Ajusta las rutas
 require_once __DIR__ . '/../Models/Usuario.php';
@@ -11,11 +12,10 @@ class UsuarioRepository
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
-       
     }
 
     // ===============================================
-    // Métodos CRUD adaptados para MySQL
+    // Métodos CRUD
     // ===============================================
 
     public function crearUsuario($nombreApellido, $dni, $email, $telefono, $clave)
@@ -23,7 +23,8 @@ class UsuarioRepository
         // ¡IMPORTANTE! La clave debe ser hasheada antes de guardar en la BD
         $claveHasheada = password_hash($clave, PASSWORD_DEFAULT);
 
-        $stmt = $this->db->prepare("INSERT INTO usuarios (nombre_apellido, dni, email, telefono, clave) VALUES (?, ?, ?, ?, ?)");
+        // Los usuarios recién creados no son administradores (asume es_admin = 0)
+        $stmt = $this->db->prepare("INSERT INTO usuarios (nombre_apellido, dni, email, telefono, clave, es_admin) VALUES (?, ?, ?, ?, ?, 0)");
         try {
             $success = $stmt->execute([
                 $nombreApellido,
@@ -32,45 +33,45 @@ class UsuarioRepository
                 $telefono,
                 $claveHasheada
             ]);
-            // Si quieres devolver el objeto Usuario con el ID asignado
+            
             if ($success) {
                 $id = $this->db->lastInsertId();
-                $usuario = new Usuario($id, $nombreApellido, $dni, $email, $telefono, $claveHasheada);
+                // Al crear, se sabe que es_admin es 0
+                $usuario = new Usuario($id, $nombreApellido, $dni, $email, $telefono, $claveHasheada, 0); 
                 return $usuario;
             }
             return false;
         } catch (PDOException $e) {
             error_log("Error al crear usuario: " . $e->getMessage());
-            // Manejar error de DNI/email duplicado, etc.
             return false;
         }
     }
 
-    // El método generarNuevoId() se vuelve obsoleto, la BD lo maneja con AUTO_INCREMENT
-
     public function obtenerUsuarios()
     {
-        $stmt = $this->db->query("SELECT id, nombre_apellido, dni, email, telefono, clave FROM usuarios");
+        // ✅ CORREGIDO: Incluir 'es_admin' en el SELECT
+        $stmt = $this->db->query("SELECT id, nombre_apellido, dni, email, telefono, clave, es_admin FROM usuarios");
         $usuariosData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $usuarios = [];
         foreach ($usuariosData as $data) {
-            $usuario = new Usuario(
+            $usuarios[] = new Usuario(
                 $data['id'],
                 $data['nombre_apellido'],
                 $data['dni'],
                 $data['email'],
                 $data['telefono'],
-                $data['clave']
+                $data['clave'],
+                $data['es_admin'] // ✅ CORREGIDO: Pasar 'es_admin' al constructor
             );
-            $usuarios[] = $usuario;
         }
         return $usuarios;
     }
 
     public function obtenerUsuarioPorId($id)
     {
-        $stmt = $this->db->prepare("SELECT id, nombre_apellido, dni, email, telefono, clave FROM usuarios WHERE id = ?");
+        // ✅ CORREGIDO: Incluir 'es_admin' en el SELECT
+        $stmt = $this->db->prepare("SELECT id, nombre_apellido, dni, email, telefono, clave, es_admin FROM usuarios WHERE id = ?");
         $stmt->execute([$id]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -81,44 +82,39 @@ class UsuarioRepository
                 $data['dni'],
                 $data['email'],
                 $data['telefono'],
-                $data['clave']
+                $data['clave'],
+                $data['es_admin'] // ✅ CORREGIDO: Pasar 'es_admin' al constructor
             );
         }
         return null;
     }
 
-    /**
-     * Obtiene un usuario por su dirección de email.
-     * @param string $email
-     * @return Usuario|null Retorna un objeto Usuario si se encuentra, o null en caso contrario.
-     */
     public function obtenerUsuarioPorEmail($email)
     {
+        // Ya incluía 'es_admin'
         $stmt = $this->db->prepare("SELECT id, nombre_apellido, dni, email, telefono, clave, es_admin FROM usuarios WHERE email = ?");
         $stmt->execute([$email]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($data) {
-            $usuario = new Usuario(
+            // ✅ CORREGIDO: Usar el constructor con 'es_admin' directamente (se simplifica la lógica)
+            return new Usuario(
                 $data['id'],
                 $data['nombre_apellido'],
                 $data['dni'],
                 $data['email'],
                 $data['telefono'],
-                $data['clave']
+                $data['clave'],
+                $data['es_admin'] 
             );
-            // Si tienes un campo 'es_admin' en tu tabla usuarios, asegúrate de setearlo
-            if (isset($data['es_admin'])) {
-                $usuario->setEsAdmin($data['es_admin']); // Asegúrate de tener un setter setEsAdmin en la clase Usuario
-            }
-            return $usuario;
         }
         return null;
     }
 
     public function obtenerUsuarioPorDni($dni)
     {
-        $stmt = $this->db->prepare("SELECT id, nombre_apellido, dni, email, telefono, clave FROM usuarios WHERE dni = ?");
+        // ✅ CORREGIDO: Incluir 'es_admin' en el SELECT
+        $stmt = $this->db->prepare("SELECT id, nombre_apellido, dni, email, telefono, clave, es_admin FROM usuarios WHERE dni = ?");
         $stmt->execute([$dni]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -129,7 +125,8 @@ class UsuarioRepository
                 $data['dni'],
                 $data['email'],
                 $data['telefono'],
-                $data['clave']
+                $data['clave'],
+                $data['es_admin'] // ✅ CORREGIDO: Pasar 'es_admin' al constructor
             );
         }
         return null;
@@ -141,9 +138,10 @@ class UsuarioRepository
         $updates = [];
         $params = [];
 
-        if (isset($nuevosDatos['nombre'])) { // En tu JSON era 'nombre', en DB es 'nombre_apellido'
+        // Cambiado de 'nombre' a 'nombre_apellido' para ser consistente con la BD
+        if (isset($nuevosDatos['nombre_apellido'])) { 
             $updates[] = "nombre_apellido = ?";
-            $params[] = $nuevosDatos['nombre'];
+            $params[] = $nuevosDatos['nombre_apellido'];
         }
         if (isset($nuevosDatos['email'])) {
             $updates[] = "email = ?";
@@ -158,9 +156,14 @@ class UsuarioRepository
             $updates[] = "clave = ?";
             $params[] = password_hash($nuevosDatos['clave'], PASSWORD_DEFAULT);
         }
+        // Si se permite actualizar el rol
+        if (isset($nuevosDatos['es_admin'])) {
+            $updates[] = "es_admin = ?";
+            $params[] = $nuevosDatos['es_admin'];
+        }
 
         if (empty($updates)) {
-            return false; // No hay nada que actualizar
+            return false;
         }
 
         $sql .= implode(", ", $updates) . " WHERE id = ?";
@@ -187,26 +190,25 @@ class UsuarioRepository
     }
 
     public function autenticarUsuario($dni, $clave)
-{
-    $stmt = $this->db->prepare("SELECT id, nombre_apellido, dni, email, telefono, clave, es_admin FROM usuarios WHERE dni = ?");
-    $stmt->execute([$dni]);
-    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    {
+        // Ya incluía 'es_admin'
+        $stmt = $this->db->prepare("SELECT id, nombre_apellido, dni, email, telefono, clave, es_admin FROM usuarios WHERE dni = ?");
+        $stmt->execute([$dni]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($data && password_verify($clave, $data['clave'])) {
-        // Devuelve un objeto Usuario si las credenciales son correctas
-        return new Usuario(
-            $data['id'],
-            $data['nombre_apellido'],
-            $data['dni'],
-            $data['email'],
-            $data['telefono'],
-            $data['clave'],
-            $data['es_admin']  // Pasa es_admin al constructor
-        );
+        if ($data && password_verify($clave, $data['clave'])) {
+            // Devuelve un objeto Usuario si las credenciales son correctas
+            return new Usuario(
+                $data['id'],
+                $data['nombre_apellido'],
+                $data['dni'],
+                $data['email'],
+                $data['telefono'],
+                $data['clave'],
+                $data['es_admin'] // Pasa es_admin al constructor
+            );
+        }
+
+        return null;
     }
-
-    // Si no coincide, devolvemos null
-    return null;
-}
-   
 }

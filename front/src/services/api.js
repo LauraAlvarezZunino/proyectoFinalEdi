@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // Obtiene la URL base desde el archivo .env
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api.php'
+
 
 // Crear una instancia de Axios con la configuración base
 const api = axios.create({

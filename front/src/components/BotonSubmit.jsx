@@ -1,7 +1,11 @@
+// src/components/BotonSubmit.js (Version Corregida)
+
 import React from 'react';
 import { Button, CircularProgress } from '@mui/material';
 
-const BotonSubmit = ({ cargando, validarCampos, esRegistro }) => {
+// ⚠️ Se eliminó 'validarCampos' de las props. El botón solo se deshabilita
+// si está cargando.
+const BotonSubmit = ({ cargando, esRegistro }) => { 
   return (
     <Button
       type="submit"
@@ -14,7 +18,8 @@ const BotonSubmit = ({ cargando, validarCampos, esRegistro }) => {
         py: { xs: 1.5, sm: 1.75 },
         fontSize: { xs: '0.9rem', sm: '1rem' }
       }}
-      disabled={cargando || !validarCampos()}
+      // ✅ El botón solo se deshabilita si está cargando.
+      disabled={cargando} 
     >
       {cargando ? <CircularProgress size={24} color="inherit" /> : (esRegistro ? 'Registrarse' : 'Iniciar Sesión')}
     </Button>

@@ -30,7 +30,7 @@ const TablaUsuarios = ({ users, isAdmin, onEdit, onToggleStatus }) => {
         <TableBody>
           {users.map((u) => (
             <TableRow key={u.id}>
-              <TableCell>{u.nombreApellido}</TableCell>
+              <TableCell>{u.nombre_apellido}</TableCell>
               <TableCell>{u.dni}</TableCell>
               <TableCell>{u.email}</TableCell>
               <TableCell>{u.telefono}</TableCell>

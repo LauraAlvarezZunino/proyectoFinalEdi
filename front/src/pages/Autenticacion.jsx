@@ -28,78 +28,86 @@ export default function Autenticacion() {
   const navigate = useNavigate();
   const { login, register } = useAuth();
 
+
   // 1. Unificar el manejo de inputs
   const manejarCambioInput = (e) => {
     const { name, value } = e.target;
     establecerFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  // 2. Validación de campos básica
+  // 2. Validación de campos (Ahora devuelve el mensaje de error si existe)
   const validarCampos = () => {
     const { email, password, nombreApellido, dni, telefono } = formData;
 
-    // Validar Email y Contraseña básicos
-    if (!email || !password) return false;
-
-    if (esRegistro) {
-      // Validar campos adicionales de registro y reglas específicas
-      if (!nombreApellido || !dni || !telefono) return false;
-      if (dni.length < 7 || dni.length > 8 || !/^\d+$/.test(dni)) return false;
-      if (telefono.length < 10 || telefono.length > 11 || !/^\d+$/.test(telefono)) return false;
-      if (password.length < 4 || password.length > 8 || !/^[a-zA-Z0-9]+$/.test(password)) return false;
-      return true;
+    // Validación de campos generales
+    if (!email || !password) {
+        return 'El email y la contraseña son obligatorios.';
     }
 
-    return true;
+    // Validación específica de Registro
+    if (esRegistro) {
+      if (!nombreApellido || !dni || !telefono) {
+          return 'Todos los campos son obligatorios para el registro.';
+      }
+      
+      if (dni.length < 7 || dni.length > 8 || !/^\d+$/.test(dni)) {
+          return 'El DNI debe ser numérico y tener 7 u 8 dígitos.';
+      }
+      if (telefono.length < 10 || telefono.length > 11 || !/^\d+$/.test(telefono)) {
+          return 'El teléfono debe ser numérico y tener entre 10 y 11 dígitos.';
+      }
+    }
+
+    return ''; // Cadena vacía significa que la validación es exitosa
   };
 
   const manejarEnvioFormulario = async (evento) => {
     evento.preventDefault();
-    if (!validarCampos()) {
-      // Evitar sobrescribir errores específicos de campo si ya existen
-      if (!errorAuth) {
-        establecerErrorAuth('Por favor, completa todos los campos requeridos.');
-      }
+    establecerErrorAuth('');
+
+    const validationError = validarCampos();
+    if (validationError) {
+      establecerErrorAuth(validationError);
       return;
     }
 
-    establecerErrorAuth('');
     establecerCargando(true);
 
     try {
       let result;
+      
       if (esRegistro) {
-        // Map frontend field names to backend expected names
+        // Mapeo de datos para el backend
         const backendData = {
           nombreApellido: formData.nombreApellido,
           dni: formData.dni,
           email: formData.email,
           telefono: formData.telefono,
-          clave: formData.password // Map 'password' to 'clave'
+          clave: formData.password
         };
+        
         result = await register(backendData);
+        
         if (result.success) {
-          establecerErrorAuth('¡Registro exitoso! Por favor, inicia sesión.');
+          establecerErrorAuth('¡Registro exitoso! Ya puedes iniciar sesión.');
           establecerEsRegistro(false);
-          // Limpiar datos sensibles después del registro
           establecerFormData(prev => ({ ...initialFormState, email: prev.email }));
         } else {
           establecerErrorAuth(result.error || 'Error al registrar.');
         }
       } else {
-        // For login, backend expects DNI and clave, but frontend has email and password
-        // We need to handle this differently - login should use email or DNI?
-        // Looking at the backend, login uses DNI, but frontend collects email
-        // This is a design issue - we need to change login to accept email instead of DNI
+        // Login usa email y password (clave)
         result = await login(formData.email, formData.password);
+        
         if (result.success) {
-          navigate('/');
+          // Navegar a la página principal después del login exitoso
+          navigate('/'); 
         } else {
           establecerErrorAuth(result.error || 'Credenciales incorrectas.');
         }
       }
     } catch (error) {
-      console.error("Error de Auth:", error);
+      console.error("Error de Auth inesperado:", error);
       establecerErrorAuth('Error de conexión o del servidor.');
     } finally {
       establecerCargando(false);
@@ -107,13 +115,12 @@ export default function Autenticacion() {
   };
 
   return (
-    // CONTENEDOR PRINCIPAL: Centrado Horizontal y Vertical
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'center',    // Centra verticalmente el Container
-        justifyContent: 'center', // Centra horizontalmente el Container
-        minHeight: '100vh',      // Ocupa la altura completa de la vista
+        alignItems: 'center',    
+        justifyContent: 'center', 
+        minHeight: '100vh',      
         width: '100%',
         backgroundColor: (theme) => theme.palette.grey[50],
         px: { xs: 2, sm: 3 },
@@ -122,11 +129,11 @@ export default function Autenticacion() {
     >
       <Container
         component="main"
-        maxWidth="sm" // Usa el valor 'sm' de Material UI para manejar el ancho automáticamente
+        maxWidth="sm" 
         sx={{
           width: '100%',
-          maxWidth: 400, // Forzar un ancho máximo específico si 'sm' no es suficiente (aprox. 400px)
-          margin: '0 auto', // Garantiza el centrado horizontal
+          maxWidth: 400, 
+          margin: '0 auto', 
         }}
       >
         <Card
@@ -136,12 +143,11 @@ export default function Autenticacion() {
             maxWidth: '100%',
           }}
         >
-          {/* CONTENIDO DE LA TARJETA: Centrado Interno */}
           <CardContent
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center', // Centra el icono y el título
+              alignItems: 'center', 
               p: { xs: 2, sm: 4 },
             }}
           >
@@ -172,9 +178,9 @@ export default function Autenticacion() {
                 </Alert>
               )}
 
+              {/* 🛑 CORRECCIÓN: Se eliminó la prop validarCampos para evitar el TypeError. */}
               <BotonSubmit
                 cargando={cargando}
-                validarCampos={validarCampos}
                 esRegistro={esRegistro}
               />
 
@@ -189,5 +195,6 @@ export default function Autenticacion() {
         </Card>
       </Container>
     </Box>
+   
   );
 }

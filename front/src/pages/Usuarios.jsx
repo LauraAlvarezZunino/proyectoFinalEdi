@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -11,10 +11,14 @@ import {
   Button,
   Box,
   Alert,
+  CircularProgress, // ⬅️ Importado para indicar carga
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import FormularioUsuario from '../components/FormularioUsuario';
 import TablaUsuarios from '../components/TablaUsuarios';
+
+// 1. IMPORTAR EL SERVICIO DE API
+import * as userService from '../services/usuarioService'; 
 
 const Usuarios = () => {
   const { user, isAdmin } = useAuth();
@@ -24,36 +28,57 @@ const Usuarios = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState('success');
+  const [isLoading, setIsLoading] = useState(true); // ⬅️ Estado de carga
 
-  // Mock data - replace with API call
+  // --- Función de Alerta ---
+  const displayAlert = (message, severity = 'success') => {
+    setAlertMessage(message);
+    setAlertSeverity(severity);
+    setTimeout(() => setAlertMessage(''), 3000);
+  };
+  
+  // --- LÓGICA DE CARGA DE DATOS (API) ---
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      let data = [];
+      if (isAdmin) {
+        // Admin: Obtener todos los usuarios
+        data = await userService.getAllUsers(); 
+      } else if (user && user.id) {
+        // Usuario: Obtener solo su perfil
+        const userData = await userService.getUserById(user.id);
+        // La tabla espera un array, por eso envolvemos el objeto
+        data = [userData]; 
+      }
+      setUsers(data);
+    } catch (error) {
+      console.error("Error al cargar usuarios:", error);
+      displayAlert('Error al cargar los datos.', 'error');
+      setUsers([]); 
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAdmin, user]); 
+
   useEffect(() => {
-    const allUsers = [
-      { id: 1, nombreApellido: 'Juan Pérez', dni: '12345678', email: 'juan@example.com', telefono: '123456789', esAdmin: true, estado: 'Activo' },
-      { id: 2, nombreApellido: 'María García', dni: '87654321', email: 'maria@example.com', telefono: '987654321', esAdmin: false, estado: 'Activo' },
-      { id: 3, nombreApellido: 'Carlos López', dni: '11223344', email: 'carlos@example.com', telefono: '555666777', esAdmin: false, estado: 'Inactivo' },
-    ];
-    const filteredUsers = isAdmin ? allUsers : allUsers.filter(u => u.id === user.id);
-    setUsers(filteredUsers);
-  }, [isAdmin, user]);
+    // Ejecutar la carga inicial
+    fetchUsers();
+  }, [fetchUsers]); 
 
-
+  // --- Manejo de Editar y Agregar ---
   const handleAdd = () => {
-    setSelectedUser({
-      nombreApellido: '',
-      dni: '',
-      telefono: '',
-      email: '',
-      password: '',
-      rol: 'Usuario'
-    });
+    setSelectedUser({ nombre_apellido: '', dni: '', telefono: '', email: '', password: '', rol: 'Usuario' });
     setIsEdit(false);
     setOpen(true);
   };
 
-  const handleEdit = (user) => {
+  const handleEdit = (userToEdit) => {
+    // Aseguramos que la **contraseña esté vacía** para que no se envíe si no se cambia
     setSelectedUser({
-      ...user,
-      rol: user.esAdmin ? 'Admin' : 'Usuario'
+      ...userToEdit,
+      rol: userToEdit.esAdmin ? 'Admin' : 'Usuario',
+      password: '', 
     });
     setIsEdit(true);
     setOpen(true);
@@ -65,48 +90,70 @@ const Usuarios = () => {
     setIsEdit(false);
   };
 
-  const handleSave = () => {
-    if (isEdit) {
-      // Update existing user
-      setUsers(users.map(u =>
-        u.id === selectedUser.id ? {
-          ...selectedUser,
-          esAdmin: selectedUser.rol === 'Admin'
-        } : u
-      ));
-      setAlertMessage('Usuario actualizado exitosamente');
-    } else {
-      // Add new user
-      const newUser = {
-        ...selectedUser,
-        id: Math.max(...users.map(u => u.id)) + 1,
-        esAdmin: selectedUser.rol === 'Admin',
-        estado: 'Activo'
-      };
-      delete newUser.password; // Remove password from display
-      delete newUser.rol; // Remove rol from display
-      setUsers([...users, newUser]);
-      setAlertMessage('Usuario agregado exitosamente');
-    }
-    setAlertSeverity('success');
-    setTimeout(() => setAlertMessage(''), 3000);
-    handleClose();
-  };
-
-  const handleToggleStatus = (id, currentStatus) => {
-    const newStatus = currentStatus === 'Activo' ? 'Inactivo' : 'Activo';
-    setUsers(users.map(u =>
-      u.id === id ? { ...u, estado: newStatus } : u
-    ));
-    setAlertMessage(`Usuario ${newStatus.toLowerCase()} exitosamente`);
-    setAlertSeverity('success');
-    setTimeout(() => setAlertMessage(''), 3000);
-  };
-
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setSelectedUser(prev => ({ ...prev, [name]: value }));
   };
+  
+  // --- LÓGICA DE GUARDAR (API) ---
+  const handleSave = async () => {
+    if (!selectedUser || !selectedUser.email || !selectedUser.nombreApellido) {
+      displayAlert('Datos incompletos', 'warning');
+      return;
+    }
+    
+    // Preparar el objeto para el API
+    const userToSave = {
+      ...selectedUser,
+      esAdmin: selectedUser.rol === 'Admin',
+    };
+    delete userToSave.rol; 
+
+    // Bloqueo de seguridad: si no es admin, no puede cambiar su propio rol.
+    if (!isAdmin && isEdit) {
+      userToSave.esAdmin = user.esAdmin; 
+    }
+
+    try {
+      if (isEdit) {
+        // 2. Llamada para actualizar
+        await userService.updateUser(userToSave.id, userToSave);
+        displayAlert('Usuario actualizado exitosamente');
+      } else {
+        // 3. Llamada para crear
+        await userService.createUser(userToSave); 
+        displayAlert('Usuario agregado exitosamente');
+      }
+      
+      handleClose();
+      // Recargar los datos después de guardar
+      fetchUsers(); 
+
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      displayAlert(`Error al ${isEdit ? 'actualizar' : 'crear'} el usuario. Por favor, revisa la consola.`, 'error');
+    }
+  };
+
+  // --- LÓGICA DE CAMBIAR ESTADO (API) ---
+  const handleToggleStatus = async (id, currentStatus) => {
+    if (!isAdmin) return;
+    
+    const newStatus = currentStatus === 'Activo' ? 'Inactivo' : 'Activo';
+    
+    try {
+      // 4. Llamada para cambiar estado
+      await userService.toggleUserStatus(id, newStatus); 
+      
+      displayAlert(`Usuario ${newStatus.toLowerCase()} exitosamente`);
+      fetchUsers();
+      
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+      displayAlert('Error al cambiar el estado del usuario.', 'error');
+    }
+  };
+
 
   return (
     <Container maxWidth="lg">
@@ -118,7 +165,7 @@ const Usuarios = () => {
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, mb: 3 }}>
         <Typography variant="h4" component="h1">
-          {isAdmin ? 'Usuarios' : 'Mi Perfil'}
+          {isAdmin ? 'Gestión de Usuarios' : 'Mi Perfil'}
         </Typography>
         {isAdmin && (
           <Button variant="contained" color="primary" onClick={handleAdd}>
@@ -129,12 +176,21 @@ const Usuarios = () => {
 
       <Card>
         <CardContent>
-          <TablaUsuarios
-            users={users}
-            isAdmin={isAdmin}
-            onEdit={handleEdit}
-            onToggleStatus={handleToggleStatus}
-          />
+          {isLoading ? (
+            // Mostrar indicador de carga
+            <Box display="flex" justifyContent="center" alignItems="center" height={200}>
+              <CircularProgress />
+              <Typography sx={{ ml: 2 }}>Cargando datos...</Typography>
+            </Box>
+          ) : (
+            // Mostrar la tabla o mensaje de no resultados
+            <TablaUsuarios
+              users={users}
+              isAdmin={isAdmin}
+              onEdit={handleEdit}
+              onToggleStatus={handleToggleStatus}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -147,6 +203,10 @@ const Usuarios = () => {
               onChange={handleFormChange}
               isEdit={isEdit}
               isAdmin={isAdmin}
+              // El campo de rol solo se puede modificar si el usuario es Admin
+              canChangeRole={isAdmin} 
+              // La contraseña solo es requerida al crear
+              passwordRequired={!isEdit} 
             />
           )}
         </DialogContent>
