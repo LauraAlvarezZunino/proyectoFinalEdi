@@ -53,10 +53,9 @@ function AppContent() {
   const location = useLocation();
 
   // Definir si la ruta actual es una página que no necesita el Header/Sidebar (el "chrome")
-  const isPublicPage = 
-    location.pathname === '/auth' || 
-    location.pathname === '/catalogo' || 
-    location.pathname.startsWith('/habitacion/'); 
+  const isPublicPage =
+    location.pathname === '/auth' ||
+    location.pathname.startsWith('/habitacion/');
   
   // Mostrar Header y Sidebar solo si está autenticado Y no está en una página pública
   const showChrome = user && !isPublicPage;
@@ -86,29 +85,32 @@ function AppContent() {
           <Route path="/auth" element={<Autenticacion />} />
           
           {/* 2. Rutas del Catálogo de Habitaciones */}
-          <Route path="/catalogo" element={<CatalogoHabitaciones />} />
+          <Route path="/habitaciones" element={<CatalogoHabitaciones />} />
           <Route path="/habitacion/:id" element={<HabitacionDetalleReserva />} />
           
           {/* 3. Ruta Raíz (Home) */}
-          <Route 
-            path="/" 
-            element={user ? 
+          <Route
+            path="/"
+            element={user ?
               <ProtectedRoute><PanelDeControl /></ProtectedRoute> : // Si está logueado, ir al Dashboard
-              <Navigate to="/catalogo" replace /> // Si no está logueado, ir al catálogo
-            } 
+              <Navigate to="/auth" replace /> // Si no está logueado, ir al formulario de autenticación
+            }
           />
           
           {/* ------------------ RUTAS PROTEGIDAS (Admin/Usuario Logueado) ------------------ */}
-          
+
           {/* Dashboard (Protegida) */}
           <Route path="/dashboard" element={<ProtectedRoute><PanelDeControl /></ProtectedRoute>} />
 
           {/* Gestión de Habitaciones (Protegida, idealmente solo para Admin) */}
           <Route path="/gestion-habitaciones" element={<ProtectedRoute><GestionHabitaciones /></ProtectedRoute>} />
-          
+
+          {/* Habitaciones (Protegida) */}
+          <Route path="/habitaciones" element={<ProtectedRoute><CatalogoHabitaciones /></ProtectedRoute>} />
+
           {/* Reservas (Protegida) */}
           <Route path="/reservas" element={<ProtectedRoute><Reservas /></ProtectedRoute>} />
-          
+
           {/* Usuarios (Protegida) */}
           <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
           

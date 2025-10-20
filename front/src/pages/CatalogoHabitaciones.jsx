@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   AppBar, Toolbar, Typography, Button, Container, Grid, 
-  CircularProgress, Alert,
+  CircularProgress, Alert, Box, // 💡 Importamos Box para manejar el margen del sidebar
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
-//para no autenticados
-// 1. Importar el servicio de habitaciones
 import * as habitacionService from '../services/habitacionService'; 
-// import api from '../servicios/api'; // Ya no se necesita
 import TarjetaHabitacion from '../components/TarjetaHabitacion'; 
 
 export default function ListadoHabitaciones() {
@@ -17,78 +14,87 @@ export default function ListadoHabitaciones() {
   const [errorCarga, establecerErrorCarga] = useState(null); 
   const navigate = useNavigate();
 
-  // Encapsulamos la lógica de carga usando useCallback
   const fetchHabitaciones = useCallback(async () => {
     establecerEstadoCarga(true);
     establecerErrorCarga(null);
     try {
-      // 2. Llamada simplificada al servicio
       const data = await habitacionService.fetchRooms();
       establecerHabitaciones(data || []);
-
     } catch (error) {
-      console.error("Error al cargar habitaciones:", error);
-      // Usar el mensaje de error del servicio o un fallback
       establecerErrorCarga(error.message || "Error al cargar la lista. El servidor no responde.");
     } finally {
       establecerEstadoCarga(false);
     }
-  }, []); // El array de dependencias está vacío porque no depende de props o estados mutables
+  }, []);
 
   useEffect(() => {
     fetchHabitaciones();
-  }, [fetchHabitaciones]); // Ejecutar solo cuando fetchHabitaciones cambie (sólo al montar)
+  }, [fetchHabitaciones]);
 
   return (  
     <>
-      <AppBar position="static" color="primary">
-        <Toolbar>
-          <MeetingRoomIcon sx={{ mr: 1 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Room Service
-          </Typography>
-          <Button color="inherit" onClick={() => navigate('/auth')}>Iniciar Sesión / Registrarse</Button>
-        </Toolbar>
-      </AppBar>
+ 
+     
+      {/* 💡 CORRECCIÓN MENÚ LATERAL: Box que aplica un margen izquierdo para compensar el sidebar.
+             Ajusta '240px' si tu menú tiene otro ancho. 'xs: 0' deshabilita el margen en móvil. */}
+      <Box 
+        sx={{ 
+            ml: { sm: '20px', xs: 0 }, 
+            flexGrow: 1, 
+            minHeight: '100vh',
+            pb: 4 // Padding inferior
+        }}
+      >
+        <Container sx={{ py: 4 }}>
+          
+          {errorCarga && ( 
+              <Alert severity="error" sx={{ mb: 4 }}>{errorCarga}</Alert>
+          )}
 
-      <Container sx={{ py: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center" color="text.primary">
-          Bienvenido a Room Service
-        </Typography>
-        <Typography variant="h6" component="p" sx={{ mb: 4 }} align="center" color="text.secondary">
-          Explora nuestras exclusivas habitaciones.
-        </Typography>
-
-        {errorCarga && ( 
-            <Alert severity="error" sx={{ mb: 4 }}>{errorCarga}</Alert>
-        )}
-
-        {estaCargando ? (
-          <Grid container justifyContent="center" sx={{ mt: 8 }}>
-            <CircularProgress color="primary" />
-            <Typography variant="subtitle1" sx={{ ml: 2 }}>Cargando habitaciones...</Typography>
-          </Grid>
-        ) : (
-          <Grid container spacing={4}>
-            {habitaciones.length > 0 ? (
-                habitaciones.map((habitacion) => (
-                    // Asegúrate de que TarjetaHabitacion maneje correctamente las props
-                    <TarjetaHabitacion 
-                        key={habitacion.id} 
-                        habitacion={habitacion} 
-                        navegar={navigate} 
-                    />
-                ))
-            ) : (
-                 !errorCarga && (
-                    <Typography variant="h6" align="center" sx={{ width: '100%', mt: 4 }}>
-                        No se encontraron habitaciones disponibles.
-                    </Typography>
-                )
-            )}
-          </Grid>
-        )}
-      </Container>
+          {estaCargando ? (
+            <Grid container justifyContent="center" sx={{ mt: 8 }}>
+              <CircularProgress color="primary" />
+              <Typography variant="subtitle1" sx={{ ml: 2 }}>Cargando habitaciones...</Typography>
+            </Grid>
+          ) : (
+            // 💡 CORRECCIÓN GRID V2: Usamos 'display: grid', 'gridTemplateColumns', y 'gap'.
+            <Grid
+              sx={{
+                display: 'grid',
+                    justifyContent: 'center',
+                // Definición de ancho responsiva (1, 2, o 3 tarjetas por fila)
+                gridTemplateColumns: {
+                  xs: 'repeat(1, 1fr)',  // Móvil: 1 columna
+                  sm: 'repeat(2, 1fr)',  // Tablet: 2 columnas
+                  md: 'repeat(3, 1fr)',  // Escritorio: 3 columnas (tamaño consistente)
+                },
+                gap: 3, // Espaciado entre las tarjetas
+                alignItems: 'stretch', // Fuerza a que todas las tarjetas tengan la misma altura
+              }}
+            >
+              {habitaciones.length > 0 ? (
+                  habitaciones.map((habitacion) => {
+                    return (
+                      /* 💡 CORRECCIÓN V2: TarjetaHabitacion es ahora un hijo directo, 
+                         sin envolver en <Grid item> ni usar props de ancho. */
+                      <TarjetaHabitacion
+                          key={habitacion.id}
+                          habitacion={habitacion}
+                          navegar={navigate}
+                      />
+                    );
+                  })
+              ) : (
+                   !errorCarga && (
+                      <Typography variant="h6" align="center" sx={{ width: '100%', mt: 4 }}>
+                          No se encontraron habitaciones disponibles.
+                      </Typography>
+                  )
+              )}
+            </Grid>
+          )}
+        </Container>
+      </Box>
     </>
   );
 }

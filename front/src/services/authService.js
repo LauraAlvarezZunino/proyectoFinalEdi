@@ -1,5 +1,48 @@
 // src/services/authService.js (Actualización de loginUser)
-import api from '../services/api'; 
+import api from '../services/api';
+
+// Función para registrar usuario
+export const registerUser = async (userData) => {
+    try {
+        console.log('Enviando datos de registro:', userData);
+        const response = await api.post('/autenticacion/registro', userData);
+        console.log('Respuesta del registro:', response);
+
+        let data = response.data;
+
+        // El backend está enviando "re" al inicio de la respuesta JSON
+        if (typeof data === 'string' && data.startsWith('re')) {
+            data = data.substring(2); // Remover "re" del inicio
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+                console.error('Error parseando JSON después de remover "re":', data);
+                throw new Error('Formato de respuesta JSON incorrecto.');
+            }
+        }
+
+        // Verificar que la respuesta sea un objeto válido
+        if (typeof data !== 'object' || data === null) {
+            console.error('Respuesta del servidor:', data);
+            throw new Error('Formato de respuesta JSON incorrecto.');
+        }
+
+        // Verificar si hay error
+        if (data.error) {
+            console.error('Error del servidor:', data.error);
+            throw new Error(data.error);
+        }
+
+        console.log('Registro exitoso:', data);
+        return data;
+
+    } catch (error) {
+        console.error("AuthService Register Error:", error.response?.data || error.message);
+        // Si el error es una excepción de red o parseo, usa el mensaje de error.
+        throw new Error(error.message || error.response?.data?.error || 'Error de conexión o del servidor.');
+    }
+};
+
 export const loginUser = async (email, password) => {
     try {
         const response = await api.post('/autenticacion/inicio-sesion', {

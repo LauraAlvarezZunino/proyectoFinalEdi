@@ -4,8 +4,8 @@ import {
   AppBar, Toolbar, Typography, Button, Container, Card, CardContent,
   CircularProgress, Grid, Alert, Snackbar, Box // Importado Box para centrar
 } from '@mui/material';
-import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
-import dayjs from 'dayjs'; // ⚠️ REQUiere instalación: npm install dayjs
+
+import dayjs from 'dayjs'; 
 
 // Importar servicios (asumiendo que los creaste)
 import * as habitacionService from '../services/habitacionService';
@@ -44,36 +44,70 @@ export default function DetalleHabitacion() {
 
   // --- Lógica de la API: POST Reserva (Simplificada y robusta) ---
   const manejarReserva = async (datosReserva) => {
+    console.log('Datos de reserva recibidos:', datosReserva);
     establecerErrorCarga(null); // Limpiar errores anteriores
-    
-    // ⚠️ Usar una fuente más confiable para el ID si es posible (ej: AuthContext)
-    const userId = localStorage.getItem('userId') || 1; 
 
-    // Cálculo de costo usando dayjs (más ligero que moment)
-    const precioPorNoche = habitacion.precio;
-    const fechaInicio = dayjs(datosReserva.fecha_inicio);
-    const fechaFin = dayjs(datosReserva.fecha_fin); // Corregido: usar fecha_fin, no fecha_salida
-    const duracion = fechaFin.diff(fechaInicio, 'day'); // Duración en días
-
-    if (duracion <= 0 || isNaN(precioPorNoche)) {
-      establecerErrorCarga('Fechas inválidas o precio de habitación no definido.');
+    // Obtener userId del localStorage (debería estar guardado después del login)
+    const userId = localStorage.getItem('userId');
+    console.log('UserId from localStorage:', userId);
+    if (!userId) {
+      establecerErrorCarga('Debes iniciar sesión para hacer una reserva.');
       return;
     }
 
-    const costoTotal = precioPorNoche * duracion; 
+    // Validar que tenemos las fechas
+    if (!datosReserva.fechaInicio || !datosReserva.fechaFin) {
+      establecerErrorCarga('Debes seleccionar fechas de inicio y fin.');
+      return;
+    }
+
+    // Cálculo de costo usando dayjs (más ligero que moment)
+    const precioPorNoche = habitacion.precio || habitacion.precioNoche;
+    const fecha_inicio = dayjs(datosReserva.fechaInicio);
+    const fecha_fin = dayjs(datosReserva.fechaFin);
+    const duracion = fecha_fin.diff(fecha_inicio, 'day'); // Duración en días
+
+    console.log('Cálculo de costo:', { precioPorNoche, duracion, fecha_inicio: fecha_inicio.format(), fecha_fin: fecha_fin.format() });
+    console.log('Precio por noche:', precioPorNoche, 'Tipo:', typeof precioPorNoche);
+
+    if (duracion <= 0) {
+      establecerErrorCarga('La fecha de fin debe ser posterior a la fecha de inicio.');
+      return;
+    }
+
+    if (isNaN(precioPorNoche) || precioPorNoche <= 0) {
+      establecerErrorCarga('Precio de habitación no válido.');
+      return;
+    }
+
+    // Validate that end date is after start date
+    if (fecha_fin.isBefore(fecha_inicio) || fecha_fin.isSame(fecha_inicio)) {
+      establecerErrorCarga('La fecha de fin debe ser posterior a la fecha de inicio.');
+      return;
+    }
+
+    const costoTotal = precioPorNoche * duracion;
 
     const datosFinales = {
-        fecha_inicio: fechaInicio.format('YYYY-MM-DD'), // Formato estándar para API
-        fecha_fin: fechaFin.format('YYYY-MM-DD'),
-        habitacion_id: habitacion.id, // Usar el ID del estado habitacion
-        usuario_id: userId,
+        fechaInicio: fecha_inicio.format('YYYY-MM-DD'), // Formato estándar para API
+        fechaFin: fecha_fin.format('YYYY-MM-DD'),
+        habitacionId: parseInt(habitacion.id), // Usar el ID del estado habitacion
+        usuarioId: parseInt(userId),
         costo: costoTotal.toFixed(2), // Enviar costo con 2 decimales
     };
 
+    console.log('Datos finales para enviar:', datosFinales);
+    console.log('Tipos de datos:', {
+      habitacionId: typeof datosFinales.habitacion_id,
+      usuarioId: typeof datosFinales.usuario_id,
+      costo: typeof datosFinales.costo
+    });
+
     try {
         // 2. Llamada al servicio de reserva
-        await reservaService.createReservation(datosFinales);
-        establecerReservaExitosa(true); 
+        const resultado = await reservaService.createReservation(datosFinales);
+        console.log('Reserva creada exitosamente:', resultado);
+        establecerReservaExitosa(true);
     } catch (error) {
         console.error("Error al reservar:", error);
         establecerErrorCarga(error.message || 'Error en la reserva. Revisa si has iniciado sesión.');
@@ -105,7 +139,6 @@ export default function DetalleHabitacion() {
           <Button color="inherit" onClick={() => navigate('/habitaciones')} sx={{ mr: 2 }}>
             Volver
           </Button>
-          <MeetingRoomIcon sx={{ mr: 1 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Detalle de la Habitación
           </Typography>
@@ -128,8 +161,8 @@ export default function DetalleHabitacion() {
                       Reserva esta Habitación
                     </Typography>
                     <FormularioReserva
-                        // Corregido: pasar el ID de la habitación en lugar de la habitación entera
-                        habitacionId={habitacion.id} 
+                        // Corregido: pasar la habitación completa como prop 'habitacion'
+                        habitacion={habitacion}
                         alConfirmarReserva={manejarReserva}
                     />
                   </CardContent>

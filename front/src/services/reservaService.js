@@ -17,6 +17,7 @@ export const fetchReservations = async (userId, isAdmin) => {
             ? RESERVAS_ENDPOINT // Admin: Todas las reservas
             : `${RESERVAS_ENDPOINT}?usuarioId=${userId}`; // User: Sus reservas
 
+        console.log('Fetching reservations from URL:', url);
         const response = await api.get(url);
 
         let data = response.data;
@@ -32,6 +33,7 @@ export const fetchReservations = async (userId, isAdmin) => {
             }
         }
 
+        console.log('Raw response data:', data);
         // Devolvemos la data que asumimos que es un array de reservas
         return data;
     } catch (error) {
@@ -45,11 +47,37 @@ export const fetchReservations = async (userId, isAdmin) => {
  */
 export const createReservation = async (reservationData) => {
     try {
-        const response = await api.post(RESERVAS_ENDPOINT, reservationData);
-        return response.data;
+        // Convert snake_case to camelCase to match backend expectations
+        const dataToSend = {
+            fechaInicio: reservationData.fecha_inicio || reservationData.fechaInicio,
+            fechaFin: reservationData.fecha_fin || reservationData.fechaFin,
+            habitacionId: reservationData.habitacion_id || reservationData.habitacionId,
+            usuarioId: reservationData.usuario_id || reservationData.usuarioId
+        };
+        console.log('Enviando datos de reserva:', dataToSend);
+        const response = await api.post(RESERVAS_ENDPOINT, dataToSend);
+        console.log('Respuesta cruda del backend:', response);
+
+        let data = response.data;
+
+        // Handle the "re" prefix issue from backend
+        if (typeof data === 'string' && data.startsWith('re')) {
+            data = data.substring(2);
+            try {
+                data = JSON.parse(data);
+                console.log('Datos parseados después de remover "re":', data);
+            } catch (e) {
+                console.error('Error parsing JSON after removing "re":', data);
+                throw new Error('Invalid JSON response from server');
+            }
+        }
+
+        console.log('Reserva creada exitosamente:', data);
+        return data;
     } catch (error) {
         console.error("Error creating reservation:", error);
-        throw new Error('Error al crear la reserva.');
+        const errorMessage = error.response?.data?.error || error.message || 'Error al crear la reserva.';
+        throw new Error(errorMessage);
     }
 };
 

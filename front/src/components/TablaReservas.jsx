@@ -28,20 +28,17 @@ const TablaReservas = ({ reservations, isAdmin, onEdit, onCancel }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {reservations.map((reservation) => (
+          {reservations && reservations.length > 0 ? reservations.map((reservation) => (
             <TableRow key={reservation.id}>
-              <TableCell>{reservation.habitacion}</TableCell>
-              {isAdmin && <TableCell>{reservation.cliente}</TableCell>}
+              <TableCell>{reservation.habitacion ? reservation.habitacion.numero : reservation.habitacion_id}</TableCell>
+              {isAdmin && <TableCell>{reservation.usuarioId}</TableCell>}
               <TableCell>{reservation.fechaInicio}</TableCell>
               <TableCell>{reservation.fechaFin}</TableCell>
               <TableCell>${reservation.costo}</TableCell>
               <TableCell>
                 <Chip
-                  label={reservation.estado}
-                  color={
-                    reservation.estado === 'Confirmada' ? 'success' :
-                    reservation.estado === 'Pendiente' ? 'warning' : 'error'
-                  }
+                  label="Confirmada"
+                  color="success"
                   size="small"
                 />
               </TableCell>
@@ -66,7 +63,13 @@ const TablaReservas = ({ reservations, isAdmin, onEdit, onCancel }) => {
                 </Box>
               </TableCell>
             </TableRow>
-          ))}
+          )) : (
+            <TableRow>
+              <TableCell colSpan={isAdmin ? 7 : 6} align="center">
+                No hay reservas disponibles
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </TableContainer>

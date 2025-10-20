@@ -38,21 +38,32 @@ const transformRoomData = (room) => {
 /** Obtiene todas las habitaciones. (Usado por ListadoHabitaciones.js y Habitaciones.js) */
 export const fetchRooms = async () => {
     try {
+        console.log("Servicio: Iniciando fetchRooms");
         const response = await api.get(ROOMS_ENDPOINT);
+        console.log("Servicio: Respuesta cruda del API:", response);
         let roomsData = response.data;
+        console.log("Servicio: Datos antes de procesar:", roomsData);
 
         // Manejo de respuesta string incorrecta del backend (manteniendo el parche temporal)
-        if (typeof roomsData === 'string' && roomsData.startsWith('{')) {
+        if (typeof roomsData === 'string' && roomsData.startsWith('re')) {
+             console.log("Servicio: Detectado prefijo 're', removiendo...");
              try {
-                 roomsData = JSON.parse(roomsData.replace(/^re/, ''));
+                 roomsData = JSON.parse(roomsData.substring(2));
+                 console.log("Servicio: Datos después de remover 're':", roomsData);
              } catch(e) {
+                 console.error("Servicio: Error parseando JSON después de remover 're':", e);
                  console.warn("Backend returned invalid string, attempting cleanup failed.");
              }
         }
-        
-        if (!Array.isArray(roomsData)) return []; 
 
-        return roomsData.map(transformRoomData);
+        if (!Array.isArray(roomsData)) {
+            console.error("Servicio: roomsData no es array:", roomsData);
+            return [];
+        }
+
+        const transformed = roomsData.map(transformRoomData);
+        console.log("Servicio: Datos transformados:", transformed);
+        return transformed;
     } catch (error) {
         console.error("Error fetching rooms:", error.response || error);
         throw new Error('Error al cargar la lista de habitaciones.');

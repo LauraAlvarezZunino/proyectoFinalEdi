@@ -50,6 +50,7 @@ const Reservas = () => {
     try {
       // 2. Llamada al servicio
       const data = await reservaService.fetchReservations(user.id, isAdmin);
+      console.log('Reservations data received:', data);
       setReservations(data);
     } catch (error) {
       console.error('Error fetching reservations:', error);
@@ -71,7 +72,7 @@ const Reservas = () => {
       setSelectedReservation({
         ...location.state.prefillData,
         // Asegurar que el usuarioId esté seteado al crear desde otra vista
-        usuarioId: isAdmin ? location.state.prefillData.usuarioId || '' : user?.id,
+        usuarioId: isAdmin ? location.state.prefillData.usuario_id || '' : user?.id,
       });
       setOpen(true);
       setIsEdit(false);
@@ -82,9 +83,9 @@ const Reservas = () => {
   // --- Manejo del Diálogo ---
   const handleAdd = () => {
     setSelectedReservation({
-      habitacionId: '',
+      habitacion_id: '',
       // Si no es admin, el usuarioId es el suyo automáticamente
-      usuarioId: isAdmin ? '' : user?.id, 
+      usuarioId: isAdmin ? '' : user?.id,
       fechaInicio: '',
       fechaFin: '',
     });
@@ -95,7 +96,10 @@ const Reservas = () => {
   const handleEdit = (reservation) => {
     setSelectedReservation({
       ...reservation,
-      habitacionId: reservation.habitacionId || '',
+      habitacion_id: reservation.habitacion ? reservation.habitacion.id : reservation.habitacion_id || '',
+      fechaInicio: reservation.fechaInicio,
+      fechaFin: reservation.fechaFin,
+      usuarioId: reservation.usuarioId,
     });
     setIsEdit(true);
     setOpen(true);
@@ -112,10 +116,24 @@ const Reservas = () => {
     setSelectedReservation(prev => ({ ...prev, [name]: value }));
   };
 
+  // Validation function for dates
+  const validateDates = (fechaInicio, fechaFin) => {
+    if (!fechaInicio || !fechaFin) return false;
+    const start = new Date(fechaInicio);
+    const end = new Date(fechaFin);
+    return end > start;
+  };
+
   // --- Lógica de Guardar (API) ---
   const handleSave = async () => {
-    if (!selectedReservation || !selectedReservation.fechaInicio || !selectedReservation.habitacionId) {
+    if (!selectedReservation || !selectedReservation.fechaInicio || !selectedReservation.habitacion_id) {
       displayAlert('Faltan campos obligatorios.', 'warning');
+      return;
+    }
+
+    // Validate dates
+    if (!validateDates(selectedReservation.fechaInicio, selectedReservation.fechaFin)) {
+      displayAlert('La fecha de fin debe ser posterior a la fecha de inicio.', 'warning');
       return;
     }
     
@@ -123,7 +141,7 @@ const Reservas = () => {
     const dataToSend = {
       fechaInicio: selectedReservation.fechaInicio,
       fechaFin: selectedReservation.fechaFin,
-      habitacionId: selectedReservation.habitacionId,
+      habitacionId: selectedReservation.habitacion_id,
       // Solo incluimos usuarioId si estamos creando o si es un admin editando una reserva ajena
       ...(selectedReservation.usuarioId && { usuarioId: selectedReservation.usuarioId }),
     };
@@ -134,8 +152,8 @@ const Reservas = () => {
         displayAlert('Reserva actualizada exitosamente');
       } else {
         // Al crear, se debe incluir el usuarioId si no se incluyó en dataToSend
-        if (!dataToSend.usuarioId && user?.id) {
-            dataToSend.usuarioId = user.id;
+        if (!dataToSend.usuario_id && user?.id) {
+            dataToSend.usuario_id = user.id;
         }
         await reservaService.createReservation(dataToSend);
         displayAlert('Reserva creada exitosamente');

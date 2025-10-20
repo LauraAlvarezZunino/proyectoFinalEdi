@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography, Button } from '@mui/material';
 import api from '../services/api';
 
-const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false }) => {
+const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false, isAdmin = false, alConfirmarReserva }) => {
+  console.log('FormularioReserva renderizado con props:', { habitacion, reserva, isEdit, isAdmin });
   const [habitaciones, setHabitaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
 
@@ -51,20 +52,38 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
     fetchData();
   }, [isAdmin]);
 
-  const calcularCosto = (habitacionId, fechaInicio, fechaFin) => {
-    if (!habitacionId || !fechaInicio || !fechaFin) return 0;
-
-    const habitacion = habitaciones.find(h => h.id === habitacionId);
-    if (!habitacion) return 0;
+  const calcularCosto = (fechaInicio, fechaFin) => {
+    if (!habitacion || !fechaInicio || !fechaFin) return 0;
 
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
     const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
 
-    return dias > 0 ? dias * habitacion.precio : 0;
+    const precioNoche = parseFloat(habitacion.precio) || parseFloat(habitacion.precioNoche) || 0;
+    const costo = dias > 0 ? dias * precioNoche : 0;
+    console.log('Cálculo de costo en FormularioReserva:', { fechaInicio, fechaFin, dias, precioNoche, costo, habitacion });
+    return costo;
   };
 
-  const costoCalculado = calcularCosto(reserva.habitacionId, reserva.fechaInicio, reserva.fechaFin);
+  // Estado local para manejar los cambios del formulario
+  const [formData, setFormData] = useState({
+    fechaInicio: reserva.fechaInicio || '',
+    fechaFin: reserva.fechaFin || '',
+    habitacionId: habitacion?.id || reserva.habitacionId || ''
+  });
+
+  // Función para manejar cambios en el formulario
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // También llamar a onChange si está definido (para compatibilidad)
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  const costoCalculado = calcularCosto(formData.fechaInicio, formData.fechaFin);
 
   return (
     <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -78,7 +97,7 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
               name="usuarioId"
               value={reserva.usuarioId || ''}
               label="Cliente"
-              onChange={onChange}
+              onChange={handleChange}
             >
               {usuarios.map((usuario) => (
                 <MenuItem key={usuario.id} value={usuario.id}>
@@ -91,30 +110,39 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
       )}
 
       <Grid item xs={12}>
-        <FormControl fullWidth required>
+        <FormControl fullWidth required sx={{ minWidth: 300 }}>
           <InputLabel id="habitacion-label">Habitación</InputLabel>
           <Select
             labelId="habitacion-label"
             id="habitacionId"
             name="habitacionId"
-            value={reserva.habitacionId || ''}
+            value={formData.habitacionId}
             label="Habitación"
-            onChange={onChange}
+            onChange={handleChange}
             displayEmpty
+            disabled={!!habitacion} // Deshabilitar si ya hay una habitación seleccionada
           >
-            <MenuItem value="">
-              <em>Seleccionar habitación</em>
-            </MenuItem>
-            {habitaciones.length > 0 ? habitaciones
-              .filter(h => h.estado === 'Disponible' || (isEdit && reserva.habitacionId === h.id))
-              .map((habitacion) => (
-                <MenuItem key={habitacion.id} value={habitacion.id}>
-                  {habitacion.numero} - {habitacion.tipo} (${habitacion.precio}/noche)
-                </MenuItem>
-              )) : (
-              <MenuItem disabled>
-                <em>Cargando habitaciones...</em>
+            {habitacion ? (
+              <MenuItem value={habitacion.id}>
+                {habitacion.numero} - {habitacion.tipo} (${habitacion.precio}/noche)
               </MenuItem>
+            ) : (
+              <>
+                <MenuItem value="">
+                  <em>Seleccionar habitación</em>
+                </MenuItem>
+                {habitaciones.length > 0 ? habitaciones
+                  .filter(h => h.estado === 'Disponible' || (isEdit && reserva.habitacionId === h.id))
+                  .map((hab) => (
+                    <MenuItem key={hab.id} value={hab.id}>
+                      {hab.numero} - {hab.tipo} (${hab.precio}/noche)
+                    </MenuItem>
+                  )) : (
+                  <MenuItem disabled>
+                    <em>Cargando habitaciones...</em>
+                  </MenuItem>
+                )}
+              </>
             )}
           </Select>
         </FormControl>
@@ -127,8 +155,8 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
           name="fechaInicio"
           label="Fecha de Inicio"
           type="date"
-          value={reserva.fechaInicio || ''}
-          onChange={onChange}
+          value={formData.fechaInicio}
+          onChange={handleChange}
           required
           InputLabelProps={{
             shrink: true,
@@ -164,8 +192,8 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
           name="fechaFin"
           label="Fecha de Fin"
           type="date"
-          value={reserva.fechaFin || ''}
-          onChange={onChange}
+          value={formData.fechaFin}
+          onChange={handleChange}
           required
           InputLabelProps={{
             shrink: true,
@@ -176,7 +204,7 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
             }
           }}
           inputProps={{
-            min: reserva.fechaInicio || new Date().toISOString().split('T')[0] // Min date is start date or today
+            min: formData.fechaInicio || new Date().toISOString().split('T')[0] // Min date is start date or today
           }}
           sx={{
             '& .MuiInputBase-root': {
@@ -198,6 +226,31 @@ const FormularioReserva = ({ reserva, onChange, isEdit = false, isAdmin = false 
         <Typography variant="body1" color="text.secondary">
           Costo estimado: ${costoCalculado}
         </Typography>
+      </Grid>
+
+      <Grid item xs={12} sx={{ mt: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={() => {
+            console.log('Botón "Reservar Habitación" clickeado');
+            if (alConfirmarReserva) {
+              const datosReserva = {
+                fechaInicio: formData.fechaInicio,
+                fechaFin: formData.fechaFin,
+                habitacionId: habitacion?.id || formData.habitacionId
+              };
+              console.log('Enviando datos de reserva:', datosReserva);
+              alConfirmarReserva(datosReserva);
+            } else {
+              console.error('alConfirmarReserva no está definido');
+            }
+          }}
+          disabled={!formData.fechaInicio || !formData.fechaFin || (!habitacion && !formData.habitacionId)}
+        >
+          Reservar Habitación
+        </Button>
       </Grid>
     </Grid>
   );

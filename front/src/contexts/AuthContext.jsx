@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+    localStorage.removeItem('userId');
     setUser(null);
   };
   
@@ -60,6 +61,7 @@ export const AuthProvider = ({ children }) => {
       // 2. Almacenamiento y Estado
       localStorage.setItem('authToken', token);
       localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('userId', userData.id.toString()); // Guardar userId por separado
       setUser(userData);
 
       setLoading(false);
