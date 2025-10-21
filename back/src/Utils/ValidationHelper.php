@@ -1,4 +1,4 @@
-re<?php
+<?php
 
 class ValidationHelper
 {
@@ -71,25 +71,16 @@ class ValidationHelper
         return preg_match("/^\\d{10,11}$/", $telefono);
     }
 
-   public static function isValidClave($clave)
+    public static function isValidClave($clave)
     {
         if (!is_string($clave) || $clave === null) {
             return false;
         }
-        
-        // 1. Longitud mínima segura (ej. 8 caracteres)
-        if (strlen($clave) < 8) {
+
+        // Longitud entre 4 y 8 caracteres alfanuméricos
+        if (strlen($clave) < 4 || strlen($clave) > 8) {
             return false;
         }
-
-        // 2. Opcional: Si querés restringir la longitud máxima
-        if (strlen($clave) > 60) {
-             return false;
-        }
-        
-        // 3. Ya no usamos la expresión regular estricta, solo la longitud.
-        // Opcional: Si querés forzar que tenga al menos un carácter no alfanumérico para seguridad:
-        // if (!preg_match('/[^a-zA-Z0-9]/', $clave)) { return false; } 
 
         return true;
     }

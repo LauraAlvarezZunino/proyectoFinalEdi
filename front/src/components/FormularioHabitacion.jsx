@@ -2,7 +2,7 @@ import React from 'react';
 import { Grid, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 const FormularioHabitacion = ({ habitacion, onChange, isEdit = false }) => {
-  const tiposHabitacion = ['Simple', 'Doble', 'Suite', 'Deluxe'];
+  const tiposHabitacion = ['Simple', 'Doble', 'Familiar'];
  
 
   return (

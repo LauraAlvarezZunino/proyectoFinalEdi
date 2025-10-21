@@ -31,9 +31,16 @@ class ReservaController {
 
             case 'GET':
                 if (!$id) {
-                    // /api/reservas (Todas las reservas - solo Admin)
-                    if (!$isAdmin) { jsonResponse(['message' => 'Acceso denegado.'], 403); }
-                    $this->getAllReservations();
+                    // Check for usuarioId query parameter for user-specific reservations
+                    $usuarioIdQuery = $_GET['usuarioId'] ?? null;
+                    if ($usuarioIdQuery && is_numeric($usuarioIdQuery)) {
+                        // /api/reservas?usuarioId={user_id} - User reservations
+                        $this->getUserReservations($usuarioIdQuery, $loggedInUserId, $isAdmin);
+                    } else {
+                        // /api/reservas (Todas las reservas - solo Admin)
+                        if (!$isAdmin) { jsonResponse(['message' => 'Acceso denegado.'], 403); }
+                        $this->getAllReservations();
+                    }
                 } elseif (is_numeric($id)) {
                     // /api/reservas/{user_id} o /api/reservas/{reserva_id}
                     // Asumimos que $id aquí es el ID del usuario cuyas reservas se buscan
@@ -66,11 +73,12 @@ class ReservaController {
         // El usuarioId se toma del token, no del input, por seguridad
         $usuarioId = $loggedInUserId; 
 
-        if (!ValidationHelper::isValidDateFormat($fechaInicio) || 
+        if (!ValidationHelper::isValidDateFormat($fechaInicio) ||
             !ValidationHelper::isValidDateFormat($fechaFin) ||
             !ValidationHelper::isEndDateAfterStartDate($fechaInicio, $fechaFin) ||
+            !ValidationHelper::isFutureOrPresentDate($fechaInicio) ||
             !ValidationHelper::isValidNumeroEntero($habitacionId)) {
-            jsonResponse(['error' => 'Datos de reserva incompletos o inválidos.'], 400);
+            jsonResponse(['error' => 'Datos de reserva incompletos o inválidos. Las fechas deben ser actuales o futuras.'], 400);
         }
 
         $usuario = $this->usuarioRepository->obtenerUsuarioPorId($usuarioId);
@@ -177,8 +185,9 @@ class ReservaController {
 
         if (!ValidationHelper::isValidDateFormat($nuevaFechaInicio) || !ValidationHelper::isValidDateFormat($nuevaFechaFin) ||
             !ValidationHelper::isEndDateAfterStartDate($nuevaFechaInicio, $nuevaFechaFin) ||
+            !ValidationHelper::isFutureOrPresentDate($nuevaFechaInicio) ||
             !ValidationHelper::isValidNumeroEntero($nuevaHabitacionId)) {
-            jsonResponse(['error' => 'Datos de actualización de reserva incompletos o inválidos.'], 400);
+            jsonResponse(['error' => 'Datos de actualización de reserva incompletos o inválidos. Las fechas deben ser actuales o futuras.'], 400);
         }
 
         $nuevaHabitacion = $this->habitacionRepository->obtenerHabitacionPorId($nuevaHabitacionId);

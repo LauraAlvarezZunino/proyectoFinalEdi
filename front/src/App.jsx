@@ -13,6 +13,8 @@ import Sidebar from './components/Sidebar';
 
 // Páginas - Importaciones actualizadas
 import PanelDeControl from './pages/PanelDeControl';
+import AdminDashboard from './pages/AdminDashboard';
+import UserDashboard from './pages/UserDashboard';
 import GestionHabitaciones from './pages/GestionHabitaciones'; // Para el Admin
 import Reservas from './pages/Reservas';
 import Usuarios from './pages/Usuarios';
@@ -55,6 +57,7 @@ function AppContent() {
   // Definir si la ruta actual es una página que no necesita el Header/Sidebar (el "chrome")
   const isPublicPage =
     location.pathname === '/auth' ||
+    location.pathname === '/catalogo' ||
     location.pathname.startsWith('/habitacion/');
   
   // Mostrar Header y Sidebar solo si está autenticado Y no está en una página pública
@@ -85,9 +88,9 @@ function AppContent() {
           <Route path="/auth" element={<Autenticacion />} />
           
           {/* 2. Rutas del Catálogo de Habitaciones */}
-          <Route path="/habitaciones" element={<CatalogoHabitaciones />} />
+          <Route path="/catalogo" element={<CatalogoHabitaciones />} />
           <Route path="/habitacion/:id" element={<HabitacionDetalleReserva />} />
-          
+
           {/* 3. Ruta Raíz (Home) */}
           <Route
             path="/"
@@ -96,7 +99,7 @@ function AppContent() {
               <Navigate to="/auth" replace /> // Si no está logueado, ir al formulario de autenticación
             }
           />
-          
+
           {/* ------------------ RUTAS PROTEGIDAS (Admin/Usuario Logueado) ------------------ */}
 
           {/* Dashboard (Protegida) */}

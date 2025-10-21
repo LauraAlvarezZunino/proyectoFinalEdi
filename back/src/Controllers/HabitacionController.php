@@ -34,6 +34,15 @@ class HabitacionController {
                 $this->createRoom($input);
                 break;
 
+            case 'PUT':
+                if (!$isAdmin) {
+                    jsonResponse(['error' => 'Acceso denegado. Se requieren permisos de administrador.'], 403);
+                }
+                if ($id && is_numeric($id)) {
+                    $this->updateRoom($id, $input);
+                }
+                break;
+
             case 'DELETE':
                 if (!$isAdmin) {
                     jsonResponse(['error' => 'Acceso denegado. Se requieren permisos de administrador.'], 403);
@@ -112,6 +121,38 @@ class HabitacionController {
             jsonResponse(['message' => 'Habitación eliminada correctamente.']);
         } else {
             jsonResponse(['error' => 'Error al eliminar la habitación. Podría tener reservas asociadas.'], 409);
+        }
+    }
+
+    // Nuevo método para actualizar habitación
+    private function updateRoom($id, $data) {
+        if (!ValidationHelper::isValidNumeroEntero($id)) {
+            jsonResponse(['error' => 'ID de habitación inválido.'], 400);
+        }
+
+        $habitacionExistente = $this->habitacionRepository->obtenerHabitacionPorId($id);
+        if (!$habitacionExistente) {
+            jsonResponse(['error' => 'Habitación no encontrada.'], 404);
+        }
+
+        $numero = $data['numero'] ?? $habitacionExistente->getNumero();
+        $tipo = $data['tipo'] ?? $habitacionExistente->getTipo();
+        $precio = $data['precio'] ?? $habitacionExistente->getPrecio();
+
+        if (!ValidationHelper::isValidNumeroEntero($numero) || !ValidationHelper::isValidTipoHabitacion($tipo) || !ValidationHelper::isValidPrecio($precio)) {
+            jsonResponse(['error' => 'Datos de habitación incompletos o inválidos.'], 400);
+        }
+
+        // Verificar si el número cambió y si ya existe
+        if ($numero != $habitacionExistente->getNumero() && $this->habitacionRepository->buscarHabitacionPorNumero($numero)) {
+            jsonResponse(['error' => 'El número de habitación ya existe.'], 409);
+        }
+
+        $habitacionActualizada = new Habitacion($id, $numero, $tipo, $precio);
+        if ($this->habitacionRepository->actualizarHabitacion($habitacionActualizada)) {
+            jsonResponse(['message' => 'Habitación actualizada correctamente.']);
+        } else {
+            jsonResponse(['error' => 'Error al actualizar la habitación.'], 500);
         }
     }
 }

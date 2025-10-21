@@ -102,26 +102,28 @@ const Usuarios = () => {
       return;
     }
     
-    // Preparar el objeto para el API
+    // Preparar el objeto para el API con mapeo correcto
     const userToSave = {
-      ...selectedUser,
+      nombreApellido: selectedUser.nombreApellido || selectedUser.nombre_apellido,
+      telefono: selectedUser.telefono,
+      email: selectedUser.email,
+      ...(selectedUser.password && { clave: selectedUser.password }), // Solo si hay contraseña
       esAdmin: selectedUser.rol === 'Admin',
     };
-    delete userToSave.rol; 
 
     // Bloqueo de seguridad: si no es admin, no puede cambiar su propio rol.
     if (!isAdmin && isEdit) {
-      userToSave.esAdmin = user.esAdmin; 
+      userToSave.esAdmin = user.esAdmin;
     }
 
     try {
       if (isEdit) {
         // 2. Llamada para actualizar
-        await userService.updateUser(userToSave.id, userToSave);
+        await userService.updateUser(selectedUser.id, userToSave);
         displayAlert('Usuario actualizado exitosamente');
       } else {
         // 3. Llamada para crear
-        await userService.createUser(userToSave); 
+        await userService.createUser(userToSave);
         displayAlert('Usuario agregado exitosamente');
       }
       

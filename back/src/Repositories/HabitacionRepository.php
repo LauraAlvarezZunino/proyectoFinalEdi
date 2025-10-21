@@ -65,8 +65,78 @@ class HabitacionRepository
         }
         return $habitaciones;
     }
-    
-    // ... (Se asumen los métodos: buscarHabitacionPorNumero, buscarPorTipo, obtenerHabitacionPorId, actualizarHabitacion) ...
+
+    public function obtenerHabitacionPorId($id)
+    {
+        $stmt = $this->db->prepare("SELECT id, numero, tipo, precio FROM habitaciones WHERE id = ?");
+        $stmt->execute([$id]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($data) {
+            return new Habitacion($data['id'], $data['numero'], $data['tipo'], $data['precio']);
+        }
+        return null;
+    }
+
+    public function buscarHabitacionPorNumero($numero)
+    {
+        $stmt = $this->db->prepare("SELECT id, numero, tipo, precio FROM habitaciones WHERE numero = ?");
+        $stmt->execute([$numero]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($data) {
+            return new Habitacion($data['id'], $data['numero'], $data['tipo'], $data['precio']);
+        }
+        return null;
+    }
+
+    public function buscarPorTipo($tipo)
+    {
+        $stmt = $this->db->prepare("SELECT id, numero, tipo, precio FROM habitaciones WHERE tipo = ?");
+        $stmt->execute([$tipo]);
+        $habitacionesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $habitaciones = [];
+        foreach ($habitacionesData as $data) {
+            $habitaciones[] = new Habitacion($data['id'], $data['numero'], $data['tipo'], $data['precio']);
+        }
+        return $habitaciones;
+    }
+
+    public function actualizarHabitacion($id, $nuevosDatos)
+    {
+        $sql = "UPDATE habitaciones SET ";
+        $updates = [];
+        $params = [];
+
+        if (isset($nuevosDatos['numero'])) {
+            $updates[] = "numero = ?";
+            $params[] = $nuevosDatos['numero'];
+        }
+        if (isset($nuevosDatos['tipo'])) {
+            $updates[] = "tipo = ?";
+            $params[] = $nuevosDatos['tipo'];
+        }
+        if (isset($nuevosDatos['precio'])) {
+            $updates[] = "precio = ?";
+            $params[] = $nuevosDatos['precio'];
+        }
+
+        if (empty($updates)) {
+            return false;
+        }
+
+        $sql .= implode(", ", $updates) . " WHERE id = ?";
+        $params[] = $id;
+
+        $stmt = $this->db->prepare($sql);
+        try {
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar habitación: " . $e->getMessage());
+            return false;
+        }
+    }
 
     /**
      * Elimina una habitación y cancela las reservas asociadas.

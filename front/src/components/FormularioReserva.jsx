@@ -69,7 +69,7 @@ const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false,
   const [formData, setFormData] = useState({
     fechaInicio: reserva.fechaInicio || '',
     fechaFin: reserva.fechaFin || '',
-    habitacionId: habitacion?.id || reserva.habitacionId || ''
+    habitacionId: habitacion?.id || reserva.habitacion_id || reserva.habitacionId || ''
   });
 
   // Función para manejar cambios en el formulario
@@ -98,10 +98,18 @@ const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false,
               value={reserva.usuarioId || ''}
               label="Cliente"
               onChange={handleChange}
+              sx={{
+                '& .MuiSelect-select': {
+                  whiteSpace: 'normal',
+                  wordWrap: 'break-word',
+                  maxWidth: '100%',
+                  display: 'block'
+                }
+              }}
             >
               {usuarios.map((usuario) => (
-                <MenuItem key={usuario.id} value={usuario.id}>
-                  {usuario.nombreApellido}
+                <MenuItem key={usuario.id} value={usuario.id} sx={{ whiteSpace: 'normal' }}>
+                  {usuario.nombreApellido || usuario.nombre_apellido}
                 </MenuItem>
               ))}
             </Select>

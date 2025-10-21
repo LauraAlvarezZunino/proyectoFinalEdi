@@ -11,7 +11,8 @@ import { useNavigate } from 'react-router-dom';
 
 // Función auxiliar para renderizar el botón de acción
 const renderActions = (room, isAdmin, onEdit, onDelete, handleReserve) => {
-  if (isAdmin) {
+  // Si es admin Y tiene funciones de edición/eliminación, mostrar botones de admin
+  if (isAdmin && onEdit && onDelete) {
     return (
       <>
         <Button
@@ -35,7 +36,7 @@ const renderActions = (room, isAdmin, onEdit, onDelete, handleReserve) => {
     );
   }
 
-  // Lógica para usuarios regulares
+  // Lógica para usuarios regulares o cuando no hay funciones de admin
   return room.estado === 'Disponible' ? (
     <Button
       size="small"
@@ -67,7 +68,7 @@ export default function RoomCard({ room, onEdit, onDelete }) {
       state: {
         selectedRoom: room,
         prefillData: {
-          habitacionId: room.id,
+          habitacion_id: room.id,
           usuarioId: user?.id,
           fechaInicio: '',
           fechaFin: '',

@@ -46,11 +46,9 @@ class AuthController {
             error_log("Invalid telefono: $telefono");
             jsonResponse(['error' => 'Teléfono inválido. Debe tener 10-11 dígitos.'], 400);
         }
-     // Si la validación es 4-8 alfanuméricos:
-if (!ValidationHelper::isValidClave($clave)) {
-    // 💡 Corregir el mensaje para que el frontend lo muestre
-    jsonResponse(['error' => 'Clave inválida. Debe tener **exactamente** entre 4 y 8 caracteres, solo letras y números.'], 400);
-}
+        if (!ValidationHelper::isValidClave($clave)) {
+            jsonResponse(['error' => 'Clave inválida. Debe tener entre 4 y 8 caracteres.'], 400);
+        }
         if (empty($nombreApellido)) {
             error_log("Empty nombreApellido");
             jsonResponse(['error' => 'Nombre y apellido son requeridos.'], 400);

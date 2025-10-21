@@ -88,8 +88,8 @@ export const saveRoom = async (roomData, isEdit) => {
     const dataToSend = {
         // Enviar al backend los datos en el formato que espera (ej: tipo en minúsculas)
         numero: roomData.numero,
-        tipo: roomData.tipo.toLowerCase(), 
-        precio: roomData.precioNoche, // Usamos 'precioNoche' ya estandarizado
+        tipo: roomData.tipo.toLowerCase(),
+        precio: roomData.precioNoche || roomData.precio, // Corregido: usar precioNoche o precio
         estado: roomData.estado,
         // Si hay otros campos (descripción, etc.) deben incluirse aquí
         descripcion: roomData.descripcion || '',

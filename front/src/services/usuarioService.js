@@ -71,18 +71,24 @@ export const createUser = async (userData) => {
   });
 };
 
-/** * ACTUALIZAR USUARIO 
- * Nota: El backend debe IGNORAR el campo 'password' si llega vacío, 
- * para que el Admin no pueda modificarlo sin intención.
- */
+/** * ACTUALIZAR USUARIO
+  * Nota: El backend debe IGNORAR el campo 'password' si llega vacío,
+  * para que el Admin no pueda modificarlo sin intención.
+  */
 export const updateUser = async (userId, userData) => {
-  const dataToSend = { ...userData };
-  
-  // Si la contraseña está vacía, no la enviamos al backend.
-  if (dataToSend.password === '') {
-     delete dataToSend.password; 
+  const dataToSend = {
+    nombreApellido: userData.nombreApellido,
+    telefono: userData.telefono,
+    email: userData.email,
+    ...(userData.clave && { clave: userData.clave }),
+    ...(userData.esAdmin !== undefined && { esAdmin: userData.esAdmin })
+  };
+
+  // Si la contraseña está vacía, no la enviamos
+  if (!dataToSend.clave) {
+    delete dataToSend.clave;
   }
-  
+
   return fetchApi(`${API_BASE_URL}/${userId}`, {
     method: 'PUT',
     body: JSON.stringify(dataToSend),

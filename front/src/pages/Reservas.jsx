@@ -119,9 +119,14 @@ const Reservas = () => {
   // Validation function for dates
   const validateDates = (fechaInicio, fechaFin) => {
     if (!fechaInicio || !fechaFin) return false;
+
     const start = new Date(fechaInicio);
     const end = new Date(fechaFin);
-    return end > start;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+
+    // Check that start date is not in the past and end date is after start date
+    return start >= today && end > start;
   };
 
   // --- Lógica de Guardar (API) ---
@@ -133,7 +138,7 @@ const Reservas = () => {
 
     // Validate dates
     if (!validateDates(selectedReservation.fechaInicio, selectedReservation.fechaFin)) {
-      displayAlert('La fecha de fin debe ser posterior a la fecha de inicio.', 'warning');
+      displayAlert('La fecha de inicio debe ser hoy o posterior, y la fecha de fin debe ser posterior a la fecha de inicio.', 'warning');
       return;
     }
     

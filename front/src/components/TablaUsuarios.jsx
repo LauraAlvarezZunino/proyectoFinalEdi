@@ -30,10 +30,10 @@ const TablaUsuarios = ({ users, isAdmin, onEdit, onToggleStatus }) => {
         <TableBody>
           {users.map((u) => (
             <TableRow key={u.id}>
-              <TableCell>{u.nombre_apellido}</TableCell>
+              <TableCell>{u.nombreApellido || u.nombre_apellido}</TableCell>
               <TableCell>{u.dni}</TableCell>
               <TableCell>{u.email}</TableCell>
-              <TableCell>{u.telefono}</TableCell>
+              <TableCell>{u.telefono || u.telefono}</TableCell>
               {isAdmin && <TableCell>{u.esAdmin ? 'Admin' : 'Usuario'}</TableCell>}
               {isAdmin && (
                 <TableCell>

@@ -76,6 +76,11 @@ $habitacionRepository->setReservaRepository($reservaRepository);
 $authController = new AuthController($usuarioRepository);
 $usuarioController = new UsuarioController($usuarioRepository, $reservaRepository, $notificacionRepository);
 $habitacionController = new HabitacionController($habitacionRepository);
+$reservaController = new ReservaController($reservaRepository, $habitacionRepository, $notificacionRepository, $usuarioRepository);
+
+// Debug logs to validate controller instantiation
+error_log("Controllers initialized: auth=" . (isset($authController) ? 'yes' : 'no') . ", usuario=" . (isset($usuarioController) ? 'yes' : 'no') . ", habitacion=" . (isset($habitacionController) ? 'yes' : 'no') . ", reserva=" . (isset($reservaController) ? 'yes' : 'no'));
+
 /// 6. OBTENER DATOS DE LA SOLICITUD
 // 6. OBTENER DATOS DE LA SOLICITUD
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -142,6 +147,7 @@ switch ($resource) {
     case 'reservas':
         // **Ruta Protegida**: Autenticación requerida
         $auth = AuthMiddleware::authenticate();
+        error_log("Handling reservas request: method=$requestMethod, id=$id, auth_id=" . ($auth ? $auth->id : 'null'));
         $reservaController->handleRequest($requestMethod, $id, $input, $auth);
         break;
 

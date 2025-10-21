@@ -10,10 +10,11 @@ import { useAuth } from '../contexts/AuthContext';
 const drawerWidth = 240;
 
 const allMenuItems = [
-  { text: 'Inicio', icon: <DashboardIcon />, path: '/', roles: ['admin', 'user'] },
-  { text: 'Habitaciones', icon: <HotelIcon />, path: '/habitaciones', roles: ['admin', 'user'] },
+  { text: 'Panel de Control', icon: <DashboardIcon />, path: '/', roles: ['admin', 'user'] },
+  { text: 'Catálogo', icon: <HotelIcon />, path: '/catalogo', roles: ['admin', 'user'] },
   { text: 'Reservas', icon: <EventNoteIcon />, path: '/reservas', roles: ['admin', 'user'] },
-  { text: 'Usuario', icon: <PeopleIcon />, path: '/usuarios', roles: ['admin', 'user'] },
+  { text: 'Usuarios', icon: <PeopleIcon />, path: '/usuarios', roles: ['admin'] },
+  { text: 'Gestión Habitaciones', icon: <HotelIcon />, path: '/habitaciones', roles: ['admin'] },
 ];
 
 const Sidebar = () => {
