@@ -152,9 +152,9 @@ class UsuarioRepository
             $params[] = $nuevosDatos['telefono'];
         }
         if (isset($nuevosDatos['clave'])) {
-            // ¡IMPORTANTE! Hashear la nueva clave
+            // ¡IMPORTANTE! La clave ya viene hasheada desde el controlador
             $updates[] = "clave = ?";
-            $params[] = password_hash($nuevosDatos['clave'], PASSWORD_DEFAULT);
+            $params[] = $nuevosDatos['clave'];
         }
         // Si se permite actualizar el rol
         if (isset($nuevosDatos['es_admin'])) {

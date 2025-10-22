@@ -92,8 +92,10 @@ export default function Autenticacion() {
           establecerErrorAuth('¡Registro exitoso! Ya puedes iniciar sesión.');
           establecerEsRegistro(false);
           establecerFormData(prev => ({ ...initialFormState, email: prev.email }));
+          establecerCargando(false); // Reset loading state after successful registration
         } else {
           establecerErrorAuth(result.error || 'Error al registrar.');
+          establecerCargando(false); // Reset loading state after failed registration
         }
       } else {
         // Login usa email y password (clave)
@@ -103,14 +105,18 @@ export default function Autenticacion() {
           // Navegar a la página principal después del login exitoso
           navigate('/'); 
         } else {
-          establecerErrorAuth(result.error || 'Credenciales incorrectas.');
+          console.log('Login failed with error:', result.error);
+          establecerErrorAuth(result.error || 'Usuario o contraseña incorrectos.');
+          establecerCargando(false); // Asegurar que se quite el estado de carga
+          return; // Importante: salir aquí para evitar continuar con el flujo de éxito
         }
       }
     } catch (error) {
       console.error("Error de Auth inesperado:", error);
-      establecerErrorAuth('Error de conexión o del servidor.');
+      establecerErrorAuth(error.message || 'Error de conexión o del servidor.');
+      establecerCargando(false); // Asegurar que se quite el estado de carga en caso de error
     } finally {
-      establecerCargando(false);
+      // El finally se ejecuta siempre, pero ya manejamos el estado de carga en cada caso
     }
   };
 

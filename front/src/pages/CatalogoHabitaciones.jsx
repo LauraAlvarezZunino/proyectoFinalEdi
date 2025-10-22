@@ -1,18 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  AppBar, Toolbar, Typography, Button, Container, Grid, 
+  AppBar, Toolbar, Typography, Button, Container, Grid,
   CircularProgress, Alert, Box, // 💡 Importamos Box para manejar el margen del sidebar
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
-import * as habitacionService from '../services/habitacionService'; 
-import TarjetaHabitacion from '../components/TarjetaHabitacion'; 
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useAuth } from '../contexts/AuthContext';
+import * as habitacionService from '../services/habitacionService';
+import TarjetaHabitacion from '../components/TarjetaHabitacion';
 
 export default function ListadoHabitaciones() {
   const [habitaciones, establecerHabitaciones] = useState([]);
   const [estaCargando, establecerEstadoCarga] = useState(true);
-  const [errorCarga, establecerErrorCarga] = useState(null); 
+  const [errorCarga, establecerErrorCarga] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+
+  // Determinar si mostrar el botón de volver atrás
+  const showBackButton = user; // Mostrar para todos los usuarios autenticados
 
   const fetchHabitaciones = useCallback(async () => {
     establecerEstadoCarga(true);
@@ -31,16 +38,30 @@ export default function ListadoHabitaciones() {
     fetchHabitaciones();
   }, [fetchHabitaciones]);
 
-  return (  
+  return (
     <>
- 
-     
+
+      {/* AppBar con botón de volver atrás si es necesario */}
+      {showBackButton && (
+        <AppBar position="static" sx={{ mb: 2 }}>
+          <Toolbar>
+            <Button
+              color="inherit"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/dashboard')}
+            >
+              Volver al Panel
+            </Button>
+          </Toolbar>
+        </AppBar>
+      )}
+
       {/* 💡 CORRECCIÓN MENÚ LATERAL: Box que aplica un margen izquierdo para compensar el sidebar.
              Ajusta '240px' si tu menú tiene otro ancho. 'xs: 0' deshabilita el margen en móvil. */}
-      <Box 
-        sx={{ 
-            ml: { sm: '20px', xs: 0 }, 
-            flexGrow: 1, 
+      <Box
+        sx={{
+            ml: { sm: '20px', xs: 0 },
+            flexGrow: 1,
             minHeight: '100vh',
             pb: 4 // Padding inferior
         }}

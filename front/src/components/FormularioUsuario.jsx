@@ -10,7 +10,8 @@ const FormularioUsuario = ({ usuario, onChange, isEdit = false, isAdmin = false 
           id="nombreApellido"
           name="nombreApellido"
           label="Nombre y Apellido"
-          value={usuario.nombre_apellido || ''}
+          placeholder="Ingrese su nombre completo"
+          value={usuario.nombreApellido || usuario.nombre_apellido || ''}
           onChange={onChange}
           required
         />
@@ -21,6 +22,7 @@ const FormularioUsuario = ({ usuario, onChange, isEdit = false, isAdmin = false 
           id="dni"
           name="dni"
           label="DNI"
+          placeholder="Ingrese su número de DNI"
           value={usuario.dni || ''}
           onChange={onChange}
           required
@@ -32,6 +34,7 @@ const FormularioUsuario = ({ usuario, onChange, isEdit = false, isAdmin = false 
           id="telefono"
           name="telefono"
           label="Teléfono"
+          placeholder="Ingrese su número de teléfono"
           value={usuario.telefono || ''}
           onChange={onChange}
           required
@@ -43,10 +46,23 @@ const FormularioUsuario = ({ usuario, onChange, isEdit = false, isAdmin = false 
           id="email"
           name="email"
           label="Email"
+          placeholder="Ingrese su dirección de email"
           type="email"
           value={usuario.email || ''}
           onChange={onChange}
           required
+        />
+        <TextField
+          fullWidth
+          id="password"
+          name="password"
+          label="Nueva Contraseña (opcional)"
+          placeholder="Ingrese nueva contraseña si desea cambiarla"
+          type="password"
+          value={usuario.password || ''}
+          onChange={onChange}
+          helperText="Deje vacío si no desea cambiar la contraseña"
+          sx={{ mt: 2 }}
         />
       </Grid>
       {!isEdit && (

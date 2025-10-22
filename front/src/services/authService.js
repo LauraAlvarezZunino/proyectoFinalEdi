@@ -38,8 +38,24 @@ export const registerUser = async (userData) => {
 
     } catch (error) {
         console.error("AuthService Register Error:", error.response?.data || error.message);
-        // Si el error es una excepción de red o parseo, usa el mensaje de error.
-        throw new Error(error.message || error.response?.data?.error || 'Error de conexión o del servidor.');
+        // Extraer mensaje de error del servidor
+        let errorMessage = 'Error al registrar usuario.';
+
+        if (error.response?.data?.error) {
+            errorMessage = error.response.data.error;
+        } else if (error.response?.data && typeof error.response.data === 'string' && error.response.data.startsWith('re')) {
+            // Handle the "re" prefix issue for error responses
+            try {
+                const parsedError = JSON.parse(error.response.data.substring(2));
+                errorMessage = parsedError.error || parsedError.message || errorMessage;
+            } catch (e) {
+                errorMessage = error.response.data.substring(2);
+            }
+        } else if (error.message && error.message !== 'Network Error') {
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
     }
 };
 
@@ -93,7 +109,9 @@ export const loginUser = async (email, password) => {
         const userData = {
             id: userId,
             nombreApellido: nombreApellido,
-            email: email, // Usamos el email de la solicitud
+            email: data.email || email, // Usamos el email de la respuesta del servidor
+            dni: data.dni,
+            telefono: data.telefono,
             esAdmin: isAdmin,
         };
 
@@ -102,6 +120,17 @@ export const loginUser = async (email, password) => {
     } catch (error) {
         console.error("AuthService Login Error:", error.response?.data || error.message);
         // Si el error es una excepción de red o parseo, usa el mensaje de error.
-        throw new Error(error.message || error.response?.data?.error || 'Error de conexión o credenciales inválidas.');
+        let errorMessage = 'Usuario o contraseña incorrectos.';
+
+        if (error.response?.data?.error) {
+            errorMessage = error.response.data.error;
+        } else if (error.response?.data && typeof error.response.data === 'object') {
+            // Handle case where error is in the data object
+            errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+        } else if (error.message && error.message !== 'Network Error') {
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
     }
 };

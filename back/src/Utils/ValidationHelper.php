@@ -77,8 +77,8 @@ class ValidationHelper
             return false;
         }
 
-        // Longitud entre 4 y 8 caracteres alfanuméricos
-        if (strlen($clave) < 4 || strlen($clave) > 8) {
+        // Longitud entre 6 y 20 caracteres (más razonable para contraseñas)
+        if (strlen($clave) < 6 || strlen($clave) > 20) {
             return false;
         }
 

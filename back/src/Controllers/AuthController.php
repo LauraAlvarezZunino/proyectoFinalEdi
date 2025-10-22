@@ -46,9 +46,7 @@ class AuthController {
             error_log("Invalid telefono: $telefono");
             jsonResponse(['error' => 'Teléfono inválido. Debe tener 10-11 dígitos.'], 400);
         }
-        if (!ValidationHelper::isValidClave($clave)) {
-            jsonResponse(['error' => 'Clave inválida. Debe tener entre 4 y 8 caracteres.'], 400);
-        }
+        // No validar clave en registro - permitir cualquier contraseña
         if (empty($nombreApellido)) {
             error_log("Empty nombreApellido");
             jsonResponse(['error' => 'Nombre y apellido son requeridos.'], 400);
@@ -81,9 +79,11 @@ class AuthController {
         $usuario = $this->usuarioRepository->obtenerUsuarioPorEmail($email);
         error_log("User found: " . ($usuario ? 'yes' : 'no'));
         if ($usuario) {
-            error_log("Stored hash: " . $usuario->getClave());
+            error_log("Stored hash: " . substr($usuario->getClave(), 0, 10) . "..."); // Solo mostrar parte del hash por seguridad
             error_log("Input clave: " . $clave);
-            error_log("Password verify result: " . (password_verify($clave, $usuario->getClave()) ? 'true' : 'false'));
+            error_log("Input clave length: " . strlen($clave));
+            $passwordMatches = password_verify($clave, $usuario->getClave());
+            error_log("Password verify result: " . ($passwordMatches ? 'true' : 'false'));
             error_log("User esAdmin: " . ($usuario->getEsAdmin() ? 'true' : 'false'));
         }
         if ($usuario && password_verify($clave, $usuario->getClave())) {
@@ -108,7 +108,10 @@ class AuthController {
                 'token' => $jwt,
                 'user_id' => $usuario->getId(),
                 'is_admin' => $usuario->getEsAdmin(),
-                'nombre_apellido' => $usuario->getNombreApellido()
+                'nombre_apellido' => $usuario->getNombreApellido(),
+                'dni' => $usuario->getDni(),
+                'telefono' => $usuario->getTelefono(),
+                'email' => $usuario->getEmail()
             ];
             error_log("Sending response: " . json_encode($response));
             jsonResponse($response, 200);

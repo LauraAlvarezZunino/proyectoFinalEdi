@@ -5,7 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
 import {  Typography } from '@mui/material';
 // Contextos
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AuthProvider, { useAuth } from './contexts/AuthContext';
 // Componentes de Navegación/Ruta
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';

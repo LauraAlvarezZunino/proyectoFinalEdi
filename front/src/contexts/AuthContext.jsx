@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 // Importar el nuevo servicio
-import * as authService from '../services/authService'; 
+import * as authService from '../services/authService';
 // api ya no se necesita directamente, solo se usa en authService
-// import api from '../servicios/api'; 
+// import api from '../servicios/api';
 
 const AuthContext = createContext();
 
@@ -14,9 +15,11 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
+// Export the provider as default for Fast Refresh compatibility
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Mover la lógica de restauración a una función para claridad
   const restoreSession = useCallback(() => {
@@ -50,6 +53,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('userData');
     localStorage.removeItem('userId');
     setUser(null);
+    navigate('/auth');
+  };
+
+  const updateUser = (updatedUserData) => {
+    setUser(updatedUserData);
+    localStorage.setItem('userData', JSON.stringify(updatedUserData));
   };
   
   const login = async (email, password) => {
@@ -92,10 +101,13 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     loading,
     // La propiedad esAdmin es una derivada del estado del usuario, clara y concisa.
-    isAdmin: user?.esAdmin || false, 
+    isAdmin: user?.esAdmin || false,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export default AuthProvider;

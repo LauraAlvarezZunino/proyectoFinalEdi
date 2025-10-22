@@ -52,7 +52,7 @@ class UsuarioController {
             // Se omiten datos sensibles como la clave hasheada
             jsonResponse([
                 'id' => $usuario->getId(),
-                'nombre_apellido' => $usuario->getNombreApellido(),
+                'nombreApellido' => $usuario->getNombreApellido(),
                 'dni' => $usuario->getDni(),
                 'email' => $usuario->getEmail(),
                 'telefono' => $usuario->getTelefono(),
@@ -87,8 +87,11 @@ class UsuarioController {
             $nuevosDatos['email'] = $data['email'];
         }
         if (isset($data['clave'])) {
-            if (!ValidationHelper::isValidClave($data['clave'])) { jsonResponse(['error' => 'La clave debe tener entre 4 y 8 caracteres y ser alfanumérica.'], 400); }
+            // Validar longitud mínima para seguridad
+            if (strlen($data['clave']) < 6) { jsonResponse(['error' => 'La clave debe tener al menos 6 caracteres.'], 400); }
+            error_log("Password update for user $id - Original password: " . $data['clave']);
             $nuevosDatos['clave'] = password_hash($data['clave'], PASSWORD_DEFAULT);
+            error_log("Password hash generated for user $id: " . substr($nuevosDatos['clave'], 0, 20) . "...");
         }
         // Agregar validación de esAdmin si es admin
         if (isset($data['esAdmin']) && $isAdmin) {
@@ -98,8 +101,10 @@ class UsuarioController {
         if (empty($nuevosDatos)) { jsonResponse(['message' => 'No se proporcionaron datos para actualizar.'], 200); }
 
         if ($this->usuarioRepository->actualizarUsuario($id, $nuevosDatos)) {
+            error_log("User $id updated successfully with data: " . json_encode($nuevosDatos));
             jsonResponse(['message' => 'Usuario actualizado correctamente.']);
         } else {
+            error_log("Failed to update user $id with data: " . json_encode($nuevosDatos));
             jsonResponse(['error' => 'Error al actualizar el usuario.'], 500);
         }
     }

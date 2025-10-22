@@ -9,7 +9,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    // No need to navigate here since logout() already navigates to '/auth'
   };
 
   return (

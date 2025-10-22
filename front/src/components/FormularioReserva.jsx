@@ -135,22 +135,22 @@ const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false,
                 {habitacion.numero} - {habitacion.tipo} (${habitacion.precio}/noche)
               </MenuItem>
             ) : (
-              <>
-                <MenuItem value="">
+              [
+                <MenuItem key="empty" value="">
                   <em>Seleccionar habitación</em>
-                </MenuItem>
-                {habitaciones.length > 0 ? habitaciones
+                </MenuItem>,
+                ...(habitaciones.length > 0 ? habitaciones
                   .filter(h => h.estado === 'Disponible' || (isEdit && reserva.habitacionId === h.id))
                   .map((hab) => (
                     <MenuItem key={hab.id} value={hab.id}>
                       {hab.numero} - {hab.tipo} (${hab.precio}/noche)
                     </MenuItem>
-                  )) : (
-                  <MenuItem disabled>
+                  )) : [
+                  <MenuItem key="loading" disabled>
                     <em>Cargando habitaciones...</em>
                   </MenuItem>
-                )}
-              </>
+                ])
+              ]
             )}
           </Select>
         </FormControl>
