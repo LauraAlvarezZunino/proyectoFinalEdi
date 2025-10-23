@@ -33,7 +33,7 @@ export default function TarjetaHabitacion({ habitacion, navegar }) {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'center', // Centra horizontalmente la card dentro del grid cell
+        justifyContent: 'center', 
         alignItems: 'stretch',
       }}
     >
@@ -41,8 +41,8 @@ export default function TarjetaHabitacion({ habitacion, navegar }) {
         variant="outlined"
         sx={{
           width: '100%',
-          maxWidth: 380, // 🔹 Controla el ancho máximo para que no se estire demasiado
-          minWidth: 280, // 🔹 Asegura que no quede angosta
+          maxWidth: 380, 
+          minWidth: 280, 
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',

@@ -6,11 +6,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-// Importar el servicio
 import { fetchDashboardStats } from '../services/panelService';
 
-// Mapeo para renderizar los iconos de Material UI
 const iconMap = {
     HotelIcon: HotelIcon,
     EventNoteIcon: EventNoteIcon,

@@ -11,13 +11,11 @@ import {
   Button,
   Box,
   Alert,
-  CircularProgress, // ⬅️ Importado para indicar carga
+  CircularProgress, 
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import FormularioUsuario from '../components/FormularioUsuario';
 import TablaUsuarios from '../components/TablaUsuarios';
-
-// 1. IMPORTAR EL SERVICIO DE API
 import * as userService from '../services/usuarioService'; 
 
 const Usuarios = () => {
@@ -28,7 +26,7 @@ const Usuarios = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState('success');
-  const [isLoading, setIsLoading] = useState(true); // ⬅️ Estado de carga
+  const [isLoading, setIsLoading] = useState(true);
 
   // --- Función de Alerta ---
   const displayAlert = (message, severity = 'success') => {
@@ -62,7 +60,7 @@ const Usuarios = () => {
   }, [isAdmin, user]); 
 
   useEffect(() => {
-    // Ejecutar la carga inicial
+
     fetchUsers();
   }, [fetchUsers]); 
 
@@ -118,11 +116,9 @@ const Usuarios = () => {
 
     try {
       if (isEdit) {
-        // 2. Llamada para actualizar
         await userService.updateUser(selectedUser.id, userToSave);
         displayAlert('Usuario actualizado exitosamente');
       } else {
-        // 3. Llamada para crear
         await userService.createUser(userToSave);
         displayAlert('Usuario agregado exitosamente');
       }
@@ -144,9 +140,8 @@ const Usuarios = () => {
     const newStatus = currentStatus === 'Activo' ? 'Inactivo' : 'Activo';
     
     try {
-      // 4. Llamada para cambiar estado
       await userService.toggleUserStatus(id, newStatus); 
-      
+    
       displayAlert(`Usuario ${newStatus.toLowerCase()} exitosamente`);
       fetchUsers();
       

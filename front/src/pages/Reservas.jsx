@@ -11,13 +11,10 @@ import {
   Button,
   Box,
   Alert,
-  CircularProgress, // Importado para el estado de carga
+  CircularProgress, 
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
-// import api from '../services/api'; // Ya no es necesario aquí, se usa en reservaService
-
-// 1. Importar el nuevo servicio
 import * as reservaService from '../services/reservaService'; 
 import FormularioReserva from '../components/FormularioReserva';
 import TablaReservas from '../components/TablaReservas';
@@ -48,7 +45,6 @@ const Reservas = () => {
 
     setLoading(true);
     try {
-      // 2. Llamada al servicio
       const data = await reservaService.fetchReservations(user.id, isAdmin);
       console.log('Reservations data received:', data);
       setReservations(data);
@@ -61,12 +57,12 @@ const Reservas = () => {
     }
   }, [isAdmin, user]); 
 
-  // 3. Carga inicial de datos
+  // Carga inicial de datos
   useEffect(() => {
     fetchReservasData();
   }, [fetchReservasData]);
 
-  // 4. Manejo de datos precargados desde la navegación
+  // Manejo de datos precargados desde la navegación
   useEffect(() => {
     if (location.state?.prefillData) {
       setSelectedReservation({
@@ -116,27 +112,24 @@ const Reservas = () => {
     setSelectedReservation(prev => ({ ...prev, [name]: value }));
   };
 
-  // Validation function for dates
+
   const validateDates = (fechaInicio, fechaFin) => {
     if (!fechaInicio || !fechaFin) return false;
-
     const start = new Date(fechaInicio);
     const end = new Date(fechaFin);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day
-
-    // Check that start date is not in the past and end date is after start date
+    today.setHours(0, 0, 0, 0);
     return start >= today && end > start;
   };
 
-  // --- Lógica de Guardar (API) ---
+  // --- Lógica de Guardar---
   const handleSave = async () => {
     if (!selectedReservation || !selectedReservation.fechaInicio || !selectedReservation.habitacion_id) {
       displayAlert('Faltan campos obligatorios.', 'warning');
       return;
     }
 
-    // Validate dates
+  
     if (!validateDates(selectedReservation.fechaInicio, selectedReservation.fechaFin)) {
       displayAlert('La fecha de inicio debe ser hoy o posterior, y la fecha de fin debe ser posterior a la fecha de inicio.', 'warning');
       return;
@@ -173,7 +166,7 @@ const Reservas = () => {
     }
   };
 
-  // --- Lógica de Cancelar (API) ---
+  // --- Lógica de Cancelar ---
   const handleCancel = async (id) => {
     if (!window.confirm('¿Estás seguro de que quieres cancelar esta reserva?')) {
       return;

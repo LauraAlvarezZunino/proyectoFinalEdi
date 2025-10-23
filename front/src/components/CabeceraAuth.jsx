@@ -1,26 +1,22 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material'; // Importar Box
-// Importa tu imagen. Ajusta la ruta según la ubicación real de tu archivo.
+import { Typography, Box } from '@mui/material'; 
 import logoImage from '../assets/logo.png'; 
 
 const CabeceraAuth = ({ esRegistro }) => {
   return (
     <>
-      {/* Usamos Box para contener la imagen y aplicar estilos de espaciado */}
       <Box sx={{ mb: 2 }}>
         <img
           src={logoImage}
           alt="Logo de la Aplicación"
           style={{
-            // Estilos CSS directos para la imagen
-            width: '240px', // Ajusta el tamaño deseado
+            width: '240px', 
             height: 'auto',
-            display: 'block', // Asegura que el margin se aplique correctamente
+            display: 'block', 
           }}
         />
       </Box>
-      
-      {/* El resto del componente se mantiene igual */}
+  
       <Typography
         component="h1"
         variant="h5"

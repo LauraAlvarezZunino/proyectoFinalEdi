@@ -1,11 +1,8 @@
-// src/componentes/InfoHabitacion.js (Mínima modificación)
 import React from 'react';
 import { Card, CardContent, Typography } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 
 export default function InfoHabitacion({ habitacion }) {
-    // Las propiedades (nombre, descripcion, capacidad, precioNoche) ahora vienen 
-    // directamente del objeto transformado por el servicio.
     return (
         <Card sx={{ height: '100%' }}>
             <CardContent>

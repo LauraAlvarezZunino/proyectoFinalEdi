@@ -1,11 +1,7 @@
-// src/services/userService.js
-
-// **IMPORTANTE: REEMPLAZA ESTO CON LA URL BASE DE TU API**
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/usuarios';
 
 // Función auxiliar para manejar las peticiones y errores
 const fetchApi = async (url, options = {}) => {
-  // ⚠️ IMPLEMENTAR: Obtener el token de autenticación, ej: de AuthContext o localStorage
   const token = localStorage.getItem('authToken');
 
   const response = await fetch(url, {
@@ -18,7 +14,7 @@ const fetchApi = async (url, options = {}) => {
     },
   });
 
-  // Manejar respuesta 204 (No Content), común en PUT/DELETE exitosos
+  // Manejar respuesta 204 (No Content), en PUT/DELETE exitosos
   if (response.status === 204) {
     return null;
   }
@@ -35,7 +31,6 @@ const fetchApi = async (url, options = {}) => {
   }
 
   const text = await response.text();
-  // Handle the "re" prefix issue from backend
   if (text.startsWith('re')) {
     try {
       return JSON.parse(text.substring(2));
@@ -52,29 +47,23 @@ const fetchApi = async (url, options = {}) => {
 // LÓGICA DE NEGOCIO PARA LA API
 // ===============================================
 
-/** OBTENER TODOS LOS USUARIOS (Solo Admin) */
 export const getAllUsers = async () => {
   return fetchApi(API_BASE_URL);
 };
 
-/** OBTENER UN SOLO USUARIO (Para el perfil propio) */
 export const getUserById = async (userId) => {
   return fetchApi(`${API_BASE_URL}/${userId}`);
 };
 
-/** CREAR NUEVO USUARIO (Solo Admin) */
 export const createUser = async (userData) => {
-  // userData debe incluir 'password'
+
   return fetchApi(API_BASE_URL, {
     method: 'POST',
     body: JSON.stringify(userData),
   });
 };
 
-/** * ACTUALIZAR USUARIO
-  * Nota: El backend debe IGNORAR el campo 'password' si llega vacío,
-  * para que el Admin no pueda modificarlo sin intención.
-  */
+
 export const updateUser = async (userId, userData) => {
   const dataToSend = {
     nombreApellido: userData.nombreApellido,

@@ -5,13 +5,11 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-// Importar el servicio
 import { fetchDashboardStats } from '../services/panelService';
 import * as usuarioService from '../services/usuarioService';
 import FormularioUsuario from '../components/FormularioUsuario';
 
-// Mapeo para renderizar los iconos de Material UI
+
 const iconMap = {
     EventNoteIcon: EventNoteIcon,
 };
@@ -168,7 +166,7 @@ const UserDashboard = () => {
         }
 
         try {
-            // Prepare data to send, only include password if it's not empty
+            // solo incluye la clave si no esta vacio el campo
             const dataToSend = {
                 nombreApellido: editingUser.nombreApellido.trim(),
                 telefono: editingUser.telefono.trim(),
@@ -196,7 +194,7 @@ const UserDashboard = () => {
                 return;
             }
 
-            // Actualizar el contexto de autenticación (excluding password for security)
+            // Actualizar el contexto de autenticación 
             const updatedUser = {
                 ...user,
                 nombreApellido: editingUser.nombreApellido.trim(),
@@ -209,8 +207,7 @@ const UserDashboard = () => {
             setSnackbarOpen(true);
             handleCloseDialog();
         } catch (error) {
-            console.error('Error updating profile:', error);
-            // Show specific error message from the server
+            console.error('Error al actualizar el perfil:', error);
             const errorMessage = error.response?.data?.error || error.message || 'Error al actualizar el perfil';
             setSnackbarMessage(errorMessage);
             setSnackbarOpen(true);

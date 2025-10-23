@@ -131,11 +131,6 @@ const Habitaciones = () => {
           <Typography sx={{ ml: 2 }}>Cargando habitaciones...</Typography>
         </Box>
       ) : (
-        /* 💡 CORRECCIÓN GRID V2: El contenedor Grid ahora usa CSS Grid.
-         - Se elimina 'container' y 'spacing'.
-         - Se usa 'display: grid', 'gridTemplateColumns' y 'gap'.
-         - Se mantiene 'alignItems: stretch' para igualar alturas.
-        */
         <Grid 
           sx={{
             display: 'grid',
@@ -145,16 +140,14 @@ const Habitaciones = () => {
               sm: 'repeat(2, 1fr)',  // Tablet: 2 columnas
               md: 'repeat(3, 1fr)',  // Escritorio: 3 columnas (tamaño consistente)
             },
-            gap: 3, // Espaciado entre las tarjetas
-            alignItems: 'stretch', // Fuerza a que todas las tarjetas tengan la misma altura
+            gap: 3, 
+            alignItems: 'stretch', 
           }}
         >
           {rooms.length > 0 ? (
             rooms.map((room) => {
               return (
-                /* 💡 CORRECCIÓN V2: El RoomCard ahora es un hijo directo, 
-                 sin envolver en <Grid item> ni usar props de ancho.
-                */
+           
                 <RoomCard
                   key={room.id}
                   room={room}
@@ -164,7 +157,6 @@ const Habitaciones = () => {
               );
             })
           ) : (
-            // Si no hay habitaciones, sigue ocupando todo el ancho
             <Typography variant="h6" align="center" sx={{ gridColumn: '1 / -1', mt: 4 }}>
               No hay habitaciones disponibles.
             </Typography>
