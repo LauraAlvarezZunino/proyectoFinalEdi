@@ -32,21 +32,23 @@ class AuthController {
         $clave = $data['clave'] ?? null;
 
         // Debug: Log the received data
-        error_log("Registration data received: " . json_encode($data));
+        //error_log("Registration data received: " . json_encode($data));
 
         if (!ValidationHelper::isValidDni($dni)) {
             error_log("Invalid DNI: $dni");
             jsonResponse(['error' => 'DNI inválido. Debe tener 7-8 dígitos.'], 400);
         }
+
         if (!ValidationHelper::isValidEmail($email)) {
             error_log("Invalid email: $email");
             jsonResponse(['error' => 'Email inválido.'], 400);
         }
+
         if (!ValidationHelper::isValidTelefono($telefono)) {
             error_log("Invalid telefono: $telefono");
             jsonResponse(['error' => 'Teléfono inválido. Debe tener 10-11 dígitos.'], 400);
         }
-        // No validar clave en registro - permitir cualquier contraseña
+
         if (empty($nombreApellido)) {
             error_log("Empty nombreApellido");
             jsonResponse(['error' => 'Nombre y apellido son requeridos.'], 400);
@@ -63,23 +65,23 @@ class AuthController {
         }
     }
 
-    // Lógica del handleLogin original (¡con JWT!)
+    // Lógica del login
     public function login($data) {
         $email = $data['email'] ?? null;
         $clave = $data['clave'] ?? null;
 
         // Debug: Log the received login data
-        error_log("Login data received: " . json_encode($data));
+        //error_log("Login data received: " . json_encode($data));
 
         if (empty($email) || empty($clave)) {
             jsonResponse(['error' => 'Email y clave son requeridos.'], 400);
         }
 
-        // First get user by email, then verify password
+        // Traemos usuario por email y luego verificamos la contraseña
         $usuario = $this->usuarioRepository->obtenerUsuarioPorEmail($email);
         error_log("User found: " . ($usuario ? 'yes' : 'no'));
         if ($usuario) {
-            error_log("Stored hash: " . substr($usuario->getClave(), 0, 10) . "..."); // Solo mostrar parte del hash por seguridad
+            error_log("Stored hash: " . substr($usuario->getClave(), 0, 10) . "..."); // Solo muestra parte del hash por seguridad
             error_log("Input clave: " . $clave);
             error_log("Input clave length: " . strlen($clave));
             $passwordMatches = password_verify($clave, $usuario->getClave());

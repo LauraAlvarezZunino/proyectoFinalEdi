@@ -21,7 +21,6 @@ class Usuario
         $this->esAdmin = isset($esAdmin) ? (bool)$esAdmin : false;
     }
 
-    // Getters y Setters
     public function getId()
     {
         return $this->id;

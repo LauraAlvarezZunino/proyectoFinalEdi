@@ -13,7 +13,7 @@ class HabitacionController {
      * @param object|null $auth Objeto de usuario autenticado o null si no hay token (para rutas GET públicas).
      */
     public function handleRequest($method, $id, $action, $input, $auth) {
-        // La información del administrador se obtiene del objeto de autenticación
+        // La informacion del administrador se obtiene del objeto de autenticación
         $isAdmin = $auth->is_admin ?? false; 
 
         switch ($method) {
@@ -58,7 +58,6 @@ class HabitacionController {
         }
     }
 
-    // Lógica del handleGetAllRooms original
     private function getAllRooms() {
         $habitaciones = $this->habitacionRepository->obtenerHabitaciones();
         $data = array_map(function($h) {
@@ -67,7 +66,6 @@ class HabitacionController {
         jsonResponse($data);
     }
 
-    // Lógica del handleGetRoomById original
     private function getRoomById($id) {
         $habitacion = $this->habitacionRepository->obtenerHabitacionPorId($id);
         if ($habitacion) {
@@ -77,7 +75,6 @@ class HabitacionController {
         }
     }
 
-    // Lógica del handleGetRoomsByType original
     private function getRoomsByType($type) {
         if (!ValidationHelper::isValidTipoHabitacion($type)) {
             jsonResponse(['error' => 'Tipo de habitación inválido.'], 400);
@@ -89,7 +86,6 @@ class HabitacionController {
         jsonResponse($data);
     }
 
-    // Lógica del handleCreateRoom original
     private function createRoom($data) {
         $numero = $data['numero'] ?? null;
         $tipo = $data['tipo'] ?? null;
@@ -111,7 +107,6 @@ class HabitacionController {
         }
     }
 
-    // Lógica del handleDeleteRoom original
     private function deleteRoom($id) {
         if (!ValidationHelper::isValidNumeroEntero($id)) {
             jsonResponse(['error' => 'ID de habitación inválido.'], 400);
@@ -124,7 +119,6 @@ class HabitacionController {
         }
     }
 
-    // Nuevo método para actualizar habitación
     private function updateRoom($id, $data) {
         if (!ValidationHelper::isValidNumeroEntero($id)) {
             jsonResponse(['error' => 'ID de habitación inválido.'], 400);
@@ -143,7 +137,6 @@ class HabitacionController {
             jsonResponse(['error' => 'Datos de habitación incompletos o inválidos.'], 400);
         }
 
-        // Verificar si el número cambió y si ya existe
         if ($numero != $habitacionExistente->getNumero() && $this->habitacionRepository->buscarHabitacionPorNumero($numero)) {
             jsonResponse(['error' => 'El número de habitación ya existe.'], 409);
         }

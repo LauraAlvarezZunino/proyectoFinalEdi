@@ -1,5 +1,4 @@
 <?php
-// src/Repositories/HabitacionRepository.php
 
 require_once __DIR__ . '/../Models/Habitacion.php';
 require_once __DIR__ . '/../Core/Database.php';
@@ -9,7 +8,7 @@ require_once __DIR__ . '/ReservaRepository.php';
 class HabitacionRepository 
 {
     private $db;
-    private $reservaRepository; // Se inyectará vía setter
+    private $reservaRepository;
     private $notificacionRepository;
 
     /**
@@ -20,7 +19,6 @@ class HabitacionRepository
     {
         $this->db = Database::getInstance()->getConnection();
         $this->notificacionRepository = $notificacionRepository;
-        // $this->reservaRepository = null; // Inicialmente es null
     }
 
     /**
@@ -30,10 +28,6 @@ class HabitacionRepository
     {
         $this->reservaRepository = $reservaRepository;
     }
-
-    // ===============================================
-    // Métodos CRUD
-    // ===============================================
 
     public function agregarHabitacion(Habitacion $habitacion)
     {
@@ -138,9 +132,7 @@ class HabitacionRepository
         }
     }
 
-    /**
-     * Elimina una habitación y cancela las reservas asociadas.
-     */
+    //Elimina una habitación y cancela las reservas asociadas.
     public function eliminarHabitacion($habitacionNumero)
     {
         // Verificar que el Repositorio de Reservas haya sido inyectado
@@ -149,7 +141,7 @@ class HabitacionRepository
             return false;
         }
 
-        // 1. Verificar si la habitación existe y obtener su ID
+        // 1- Verificar que la habitacion existe y trae el id
         $habitacionExistente = $this->buscarHabitacionPorNumero($habitacionNumero);
         if (!$habitacionExistente) {
             error_log("Intento de eliminar habitación fallido: No existe habitación con número $habitacionNumero.");
@@ -157,25 +149,25 @@ class HabitacionRepository
         }
         $habitacionId = $habitacionExistente->getId();
 
-        // 2. Obtener y eliminar reservas asociadas 
+        // 2- Obtiene y elimina las reservas asociadas 
         $reservasAsociadas = $this->reservaRepository->obtenerReservasPorHabitacionId($habitacionId);
 
         foreach ($reservasAsociadas as $reserva) {
             $reservaId = $reserva->getId();
             $usuarioId = $reserva->getUsuarioId();
             
-            // Crear notificación
+            // Crea notificación
             $mensaje = "Tu reserva (ID: {$reservaId}) para la habitación {$habitacionNumero} fue cancelada porque la habitación fue eliminada.";
             
             $this->notificacionRepository->guardarNotificacion(
                 new Notificacion(null, $reservaId, $mensaje, $usuarioId)
             ); 
 
-            // Eliminar la reserva
+            // Elimina la reserva
             $this->reservaRepository->eliminarReserva($reservaId);
         }
 
-        // 3. Eliminar la habitación de la BD
+        // 3- Elimina la habitación de la BD
         $stmt = $this->db->prepare("DELETE FROM habitaciones WHERE id = ?");
         try {
             $success = $stmt->execute([$habitacionId]);

@@ -17,6 +17,7 @@ class NotificacionRepository
      * @param Notificacion $notificacion
      * @return bool
      */
+
     public function guardarNotificacion(Notificacion $notificacion)
     {
         try {
@@ -74,7 +75,6 @@ class NotificacionRepository
         }
     }
 
-    // Si tienes un método para mostrar notificaciones por reserva_id, también deberás ajustarlo
     public function mostrarNotificaciones($reservaId)
     {
         $stmt = $this->db->prepare("SELECT id, reserva_id, mensaje, usuario_id FROM notificaciones WHERE reserva_id = ? ORDER BY id DESC");

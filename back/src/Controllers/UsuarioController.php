@@ -21,7 +21,7 @@ class UsuarioController {
                 if ($id) {
                     $this->getUser($id, $loggedInUserId, $isAdmin);
                 } else {
-                    // Nuevo: Obtener todos los usuarios (solo admin)
+                    // Obtener todos los usuarios (solo puede hacerlo el admin)
                     if (!$isAdmin) {
                         jsonResponse(['message' => 'Acceso denegado.'], 403);
                     }
@@ -39,7 +39,6 @@ class UsuarioController {
         }
     }
 
-    // Lógica del handleGetUser original
     private function getUser($id, $loggedInUserId, $isAdmin) {
         // Autorización: Solo puede ver su propio perfil o si es admin
         if ($id != $loggedInUserId && !$isAdmin) {
@@ -63,7 +62,6 @@ class UsuarioController {
         }
     }
 
-    // Lógica del handleUpdateUser original
     private function updateUser($id, $data, $loggedInUserId, $isAdmin) {
         if ($id != $loggedInUserId && !$isAdmin) {
             jsonResponse(['message' => 'Acceso denegado. No tienes permisos para editar este usuario.'], 403);
@@ -109,7 +107,6 @@ class UsuarioController {
         }
     }
 
-    // Lógica del handleDeleteUser original
     private function deleteUser($id, $loggedInUserId, $isAdmin) {
         if ($id != $loggedInUserId && !$isAdmin) {
             jsonResponse(['message' => 'Acceso denegado. No tienes permisos para eliminar este usuario.'], 403);
@@ -119,17 +116,12 @@ class UsuarioController {
         if (!$usuario) { jsonResponse(['error' => 'Usuario no encontrado.'], 404); }
 
         if ($this->usuarioRepository->eliminarUsuario($id)) {
-            // Opcional: limpiar dependencias si no usas CASCADE en la DB
-            // $this->reservaRepository->eliminarReservasPorUsuarioId($id);
-            // $this->notificacionRepository->eliminarNotificacionesPorUsuarioId($id);
-
             jsonResponse(['message' => 'Usuario eliminado correctamente.']);
         } else {
             jsonResponse(['error' => 'Error al eliminar el usuario.'], 500);
         }
     }
 
-    // Nuevo método para obtener todos los usuarios (solo admin)
     private function getAllUsers() {
         $usuarios = $this->usuarioRepository->obtenerUsuarios();
         $data = array_map(function($u) {
@@ -140,7 +132,7 @@ class UsuarioController {
                 'email' => $u->getEmail(),
                 'telefono' => $u->getTelefono(),
                 'esAdmin' => $u->getEsAdmin(),
-                'estado' => 'Activo' // Asumiendo que todos están activos por defecto
+                'estado' => 'Activo'
             ];
         }, $usuarios);
         jsonResponse($data);

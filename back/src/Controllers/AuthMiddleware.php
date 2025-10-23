@@ -10,7 +10,7 @@ class AuthMiddleware {
     
     /**
      * Verifica el token JWT en la cabecera Authorization.
-     * * @param bool $optional Si es true, permite que la solicitud pase sin token y devuelve null.
+     * * @param bool $opional Si es true, permite que la solicitud pase sin token y devuelve null.
      * @return object|null Objeto de datos del usuario si es exitoso, o null si $optional es true.
      */
     public static function authenticate(bool $optional = false): ?object

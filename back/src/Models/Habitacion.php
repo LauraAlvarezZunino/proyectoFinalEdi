@@ -16,7 +16,6 @@ class Habitacion
         $this->precio = $precio;
     }
 
-    // Getters y Setters para el ID
     public function getId()
     {
         return $this->id;
@@ -27,7 +26,6 @@ class Habitacion
         $this->id = $id;
     }
 
-    // Getters y Setters
     public function getNumero()
     {
         return $this->numero;

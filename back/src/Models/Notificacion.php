@@ -1,12 +1,12 @@
 <?php
 class Notificacion
 {
-    private $id; // Asumiendo que las notificaciones ahora tienen su propio ID en la DB
+    private $id;
     private $reservaId;
     private $mensaje;
-    private $usuarioId;  // Cambiado a usuarioId
+    private $usuarioId;
 
-    public function __construct($id, $reservaId, $mensaje, $usuarioId) // Añade $id y cambia $usuarioDni a $usuarioId
+    public function __construct($id, $reservaId, $mensaje, $usuarioId)
     {
         $this->id = $id;
         $this->reservaId = $reservaId;
@@ -34,12 +34,12 @@ class Notificacion
         return $this->mensaje;
     }
 
-    public function getUsuarioId() // Nuevo getter
+    public function getUsuarioId()
     {
         return $this->usuarioId;
     }
 
-    public function setUsuarioId($usuarioId) // Nuevo setter
+    public function setUsuarioId($usuarioId)
     {
         $this->usuarioId = $usuarioId;
     }
@@ -50,7 +50,7 @@ class Notificacion
             'id' => $this->id,
             'reserva_id' => $this->reservaId,
             'notificacion' => $this->mensaje,
-            'usuario_id' => $this->usuarioId, // Cambiado aquí
+            'usuario_id' => $this->usuarioId,
         ];
     }
 }

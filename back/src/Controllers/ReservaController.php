@@ -13,7 +13,7 @@ class ReservaController {
         $this->reservaRepository = $rRepo;
         $this->habitacionRepository = $hRepo;
         $this->notificacionRepository = $nRepo;
-        $this->usuarioRepository = $uRepo; // Agregado para consistencia y seguridad
+        $this->usuarioRepository = $uRepo; // Se agrega para consistencia y seguridad
     }
 
     /**
@@ -31,7 +31,6 @@ class ReservaController {
 
             case 'GET':
                 if (!$id) {
-                    // Check for usuarioId query parameter for user-specific reservations
                     $usuarioIdQuery = $_GET['usuarioId'] ?? null;
                     if ($usuarioIdQuery && is_numeric($usuarioIdQuery)) {
                         // /api/reservas?usuarioId={user_id} - User reservations
@@ -43,7 +42,7 @@ class ReservaController {
                     }
                 } elseif (is_numeric($id)) {
                     // /api/reservas/{user_id} o /api/reservas/{reserva_id}
-                    // Asumimos que $id aquí es el ID del usuario cuyas reservas se buscan
+                    // El $id aca es el ID del usuario de quien buscamos las reservas
                     $this->getUserReservations($id, $loggedInUserId, $isAdmin);
                 }
                 break;
@@ -65,7 +64,6 @@ class ReservaController {
         }
     }
 
-    // Lógica del handleCreateReservation original (mejorado)
     private function createReservation($data, $loggedInUserId) {
         $fechaInicio = $data['fechaInicio'] ?? null;
         $fechaFin = $data['fechaFin'] ?? null;
@@ -113,7 +111,6 @@ class ReservaController {
         }
     }
 
-    // Lógica del handleGetUserReservations original
     private function getUserReservations($targetUserId, $loggedInUserId, $isAdmin) {
         // Autorización: Solo el propio usuario o el admin puede ver estas reservas
         if ($targetUserId != $loggedInUserId && !$isAdmin) {
@@ -142,7 +139,6 @@ class ReservaController {
         jsonResponse($data);
     }
     
-    // Lógica del handleGetAllReservations original
     private function getAllReservations() {
         // La verificación de isAdmin ya ocurrió en handleRequest
         
@@ -165,8 +161,6 @@ class ReservaController {
         jsonResponse($data);
     }
 
-
-    // Lógica del handleUpdateReservation original
     private function updateReservation($id, $data, $loggedInUserId, $isAdmin) {
         if (!ValidationHelper::isValidNumeroEntero($id)) { jsonResponse(['error' => 'ID de reserva inválido.'], 400); }
 
@@ -210,7 +204,6 @@ class ReservaController {
         }
     }
 
-    // Lógica del handleCancelReservation original
     private function cancelReservation($id, $loggedInUserId, $isAdmin) {
         if (!ValidationHelper::isValidNumeroEntero($id)) { jsonResponse(['error' => 'ID de reserva inválido.'], 400); }
 

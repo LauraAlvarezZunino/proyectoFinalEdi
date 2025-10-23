@@ -1,7 +1,5 @@
 <?php
 
-// require_once 'Controlador/habitacionControlador.php'; // Esto es un require antiguo, ya no es necesario aquí
-
 class Reserva
 {
     private $id;
@@ -9,19 +7,18 @@ class Reserva
     private $fechaFin;
     private Habitacion $habitacion;
     private $costo;
-    private $usuarioId; // Cambiamos de $usuarioDni a $usuarioId
+    private $usuarioId; 
 
-    public function __construct($id, $fechaInicio, $fechaFin, Habitacion $habitacion, $costo, $usuarioId) // Cambiar $usuarioDni por $usuarioId
+    public function __construct($id, $fechaInicio, $fechaFin, Habitacion $habitacion, $costo, $usuarioId)
     {
         $this->id = $id;
         $this->fechaInicio = $fechaInicio;
         $this->fechaFin = $fechaFin;
         $this->habitacion = $habitacion;
         $this->costo = $costo;
-        $this->usuarioId = $usuarioId; // Asignar el nuevo campo
+        $this->usuarioId = $usuarioId;
     }
 
-    // Getters y Setters
     public function getId()
     {
         return $this->id;
@@ -72,17 +69,16 @@ class Reserva
         $this->habitacion = $habitacion;
     }
 
-    public function setUsuarioId($id) // Nuevo setter
+    public function setUsuarioId($id)
     {
         $this->usuarioId = $id;
     }
 
-    public function getUsuarioId() // Nuevo getter
+    public function getUsuarioId()
     {
         return $this->usuarioId;
     }
 
-    // El método toArray (si lo usas para JSON o logs) también debería cambiar
     public function reservaToArray($reserva)
     {
         return [

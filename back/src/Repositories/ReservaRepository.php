@@ -1,7 +1,5 @@
 <?php
-// src/Repositories/ReservaRepository.php
 
-// Asegúrate de incluir los modelos y Core/Database
 require_once __DIR__ . '/../Models/Reserva.php';
 require_once __DIR__ . '/../Models/Habitacion.php';
 require_once __DIR__ . '/../Models/Usuario.php'; 
@@ -23,26 +21,21 @@ class ReservaRepository
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    //---------------------------------------------------------
-    //  CREATE (Agregar Reserva)
-    //---------------------------------------------------------
-
     public function agregarReserva(Reserva $reserva)
     {
-        // 1. Verificar disponibilidad antes de insertar
+        // 1- Verifica disponibilidad
         if (!$this->verificarDisponibilidad(
             $reserva->getHabitacion()->getId(),
             $reserva->getFechaInicio(),
             $reserva->getFechaFin(),
             null
         )) {
-            // Usar error_log en lugar de echo para evitar corromper la respuesta JSON
             error_log("Intento de reserva fallido: La habitación no está disponible para las fechas seleccionadas."); 
             return false;
         }
         
         try {
-            // Recalcular costo (ya lo haces en el Controller, pero es buena práctica hacerlo aquí también)
+            // Recalcular costo
             $fechaInicio = new DateTime($reserva->getFechaInicio());
             $fechaFin = new DateTime($reserva->getFechaFin());
             $dias = $fechaInicio->diff($fechaFin)->days;
@@ -60,24 +53,19 @@ class ReservaRepository
                 $reserva->getUsuarioId()
             ]);
         
-            // 2. Asignar el ID y el costo calculado al objeto Reserva
+            // 2- Asignar el ID y el costo calculado al objeto Reserva
             $reserva->setId($this->db->lastInsertId());
             $reserva->setCosto($costo);
             return true;
         
         } catch (PDOException $e) {
-            error_log("Error al agregar reserva: " . $e->getMessage()); // Usar error_log
+            error_log("Error al agregar reserva: " . $e->getMessage());
             return false;
         }
     }
-
-    //---------------------------------------------------------
-    //  READ (Buscar Reserva por ID)
-    //---------------------------------------------------------
     
     public function buscarReservaPorId($id)
     {
-        // Corregido: Usar 'fecha_inicio' y 'fecha_fin' para consistencia con la BD
         $stmt = $this->db->prepare("
             SELECT r.id, r.fecha_inicio, r.fecha_fin, r.costo, r.usuario_id, 
                    h.id AS habitacion_db_id, h.numero AS habitacion_numero, 
@@ -98,8 +86,8 @@ class ReservaRepository
             );
             return new Reserva(
                 $data['id'],
-                $data['fecha_inicio'], // Corregido
-                $data['fecha_fin'],    // Corregido
+                $data['fecha_inicio'],
+                $data['fecha_fin'],
                 $habitacion,
                 $data['costo'],
                 $data['usuario_id']
@@ -108,13 +96,8 @@ class ReservaRepository
         return null;
     }
 
-    //---------------------------------------------------------
-    //  READ (Reservas por Usuario)
-    //---------------------------------------------------------
-
     public function obtenerReservasPorUsuarioId($usuarioId)
     {
-        // Ya está correcto: usa fecha_inicio y fecha_fin
         $stmt = $this->db->prepare("
             SELECT r.id, r.fecha_inicio, r.fecha_fin, r.costo, r.usuario_id,
                    h.id AS habitacion_db_id, h.numero AS habitacion_numero,
@@ -147,13 +130,8 @@ class ReservaRepository
         return $reservas;
     }
 
-    //---------------------------------------------------------
-    //  READ (Todas las Reservas)
-    //---------------------------------------------------------
-
     public function obtenerTodasLasReservas()
     {
-        // Ya está correcto: usa fecha_inicio y fecha_fin
         $stmt = $this->db->prepare("SELECT r.id, r.fecha_inicio, r.fecha_fin, r.costo, r.usuario_id,
                                            h.id AS habitacion_db_id, h.numero AS habitacion_numero, 
                                            h.tipo AS habitacion_tipo, h.precio AS habitacion_precio
@@ -183,14 +161,9 @@ class ReservaRepository
         return $reservas;
     }
 
-
-    //---------------------------------------------------------
-    //  UPDATE (Modificar Reserva)
-    //---------------------------------------------------------
-
     public function modificarReserva($id, $nuevaFechaInicio, $nuevaFechaFin, Habitacion $nuevaHabitacion, $nuevoCosto)
     {
-        // 1. Verificar disponibilidad (ignorando la reserva que estamos modificando)
+        // 1- Verificar disponibilidad (ignorando la reserva que estamos modificando)
         if (!$this->verificarDisponibilidad(
             $nuevaHabitacion->getId(),
             $nuevaFechaInicio,
@@ -202,7 +175,6 @@ class ReservaRepository
         }
 
         try {
-            // Corregido: Usar 'fecha_inicio' y 'fecha_fin' para consistencia con la BD
             $stmt = $this->db->prepare("UPDATE reservas SET fecha_inicio = ?, fecha_fin = ?, habitacion_id = ?, costo = ? WHERE id = ?");
             $stmt->execute([
                 $nuevaFechaInicio,
@@ -213,14 +185,10 @@ class ReservaRepository
             ]);
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
-            error_log("Error al modificar reserva: " . $e->getMessage()); // Usar error_log
+            error_log("Error al modificar reserva: " . $e->getMessage());
             return false;
         }
     }
-
-    //---------------------------------------------------------
-    //  DELETE (Eliminar Reserva)
-    //---------------------------------------------------------
 
     public function eliminarReserva($id)
     {
@@ -233,10 +201,6 @@ class ReservaRepository
             return false;
         }
     }
-    
-    //---------------------------------------------------------
-    //  Helper (Verificar Disponibilidad)
-    //---------------------------------------------------------
 
     public function verificarDisponibilidad($habitacionId, $fechaInicio, $fechaFin, $reservaId = null)
     {
