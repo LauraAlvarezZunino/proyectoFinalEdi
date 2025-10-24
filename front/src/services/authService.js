@@ -1,7 +1,6 @@
-// src/services/authService.js (Actualización de loginUser)
 import api from '../services/api';
 
-// Función para registrar usuario
+
 export const registerUser = async (userData) => {
     try {
         console.log('Enviando datos de registro:', userData);
@@ -44,7 +43,7 @@ export const registerUser = async (userData) => {
         if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
         } else if (error.response?.data && typeof error.response.data === 'string' && error.response.data.startsWith('re')) {
-            // Handle the "re" prefix issue for error responses
+           
             try {
                 const parsedError = JSON.parse(error.response.data.substring(2));
                 errorMessage = parsedError.error || parsedError.message || errorMessage;
@@ -92,15 +91,14 @@ export const loginUser = async (email, password) => {
         }
 
 
-        // 🛑 Lógica de Validación de Datos (Revisar nombres de propiedades)
-        // Asegúrate de que tu backend usa 'token' y 'user_id'
+        // Lógica de Validación de Datos
+     
         const token = data.token;
         const userId = data.user_id;
         const isAdmin = data.is_admin;
         const nombreApellido = data.nombre_apellido;
 
         if (!token || !userId) {
-            // Revisa qué propiedad usa el backend para el mensaje de error si el login falla.
             const serverError = data.error || data.message || 'Respuesta inválida del servidor.';
             throw new Error(serverError);
         }
@@ -125,7 +123,7 @@ export const loginUser = async (email, password) => {
         if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
         } else if (error.response?.data && typeof error.response.data === 'object') {
-            // Handle case where error is in the data object
+// Manejar el caso donde el error está en el objeto de datos
             errorMessage = error.response.data.error || error.response.data.message || errorMessage;
         } else if (error.message && error.message !== 'Network Error') {
             errorMessage = error.message;

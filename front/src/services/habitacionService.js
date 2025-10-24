@@ -2,9 +2,7 @@ import api from '../services/api';
 
 const ROOMS_ENDPOINT = '/habitaciones';
 
-// --- Lógica de Transformación (Interna del servicio) ---
-
-// Auxiliar para calcular la capacidad basada en el tipo (ENUM)
+// Auxiliar para calcular la capacidad basada en el tipo 
 const getCapacidad = (tipo) => {
     switch (tipo ? tipo.toLowerCase() : '') {
         case 'simple': return 1;
@@ -14,7 +12,7 @@ const getCapacidad = (tipo) => {
     }
 };
 
-// Normaliza y completa los datos de la habitación (propiedades consistentes)
+// Normaliza y completa los datos de la habitación 
 const transformRoomData = (room) => {
     const tipoCapitalizado = room.tipo ? room.tipo.charAt(0).toUpperCase() + room.tipo.slice(1) : 'Genérica';
 
@@ -86,12 +84,12 @@ export const fetchRoomDetail = async (id) => {
 /** Guarda o actualiza una habitación. (Usado por Habitaciones.js) */
 export const saveRoom = async (roomData, isEdit) => {
     const dataToSend = {
-        // Enviar al backend los datos en el formato que espera (ej: tipo en minúsculas)
+        // Enviar al backend los datos en el formato que espera
         numero: roomData.numero,
         tipo: roomData.tipo.toLowerCase(),
-        precio: roomData.precioNoche || roomData.precio, // Corregido: usar precioNoche o precio
+        precio: roomData.precioNoche || roomData.precio, 
         estado: roomData.estado,
-        // Si hay otros campos (descripción, etc.) deben incluirse aquí
+        // Si hay otros campos (descripción, etc.) deben agregarse aca
         descripcion: roomData.descripcion || '',
     };
     

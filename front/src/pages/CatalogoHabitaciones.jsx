@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   AppBar, Toolbar, Typography, Button, Container, Grid,
-  CircularProgress, Alert, Box, // 💡 Importamos Box para manejar el margen del sidebar
+  CircularProgress, Alert, Box, 
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
@@ -18,8 +18,8 @@ export default function ListadoHabitaciones() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Determinar si mostrar el botón de volver atrás
-  const showBackButton = user; // Mostrar para todos los usuarios autenticados
+
+  const showBackButton = user; 
 
   const fetchHabitaciones = useCallback(async () => {
     establecerEstadoCarga(true);
@@ -40,8 +40,6 @@ export default function ListadoHabitaciones() {
 
   return (
     <>
-
-      {/* AppBar con botón de volver atrás si es necesario */}
       {showBackButton && (
         <AppBar position="static" sx={{ mb: 2 }}>
           <Toolbar>
@@ -56,14 +54,13 @@ export default function ListadoHabitaciones() {
         </AppBar>
       )}
 
-      {/* 💡 CORRECCIÓN MENÚ LATERAL: Box que aplica un margen izquierdo para compensar el sidebar.
-             Ajusta '240px' si tu menú tiene otro ancho. 'xs: 0' deshabilita el margen en móvil. */}
+    
       <Box
         sx={{
             ml: { sm: '20px', xs: 0 },
             flexGrow: 1,
             minHeight: '100vh',
-            pb: 4 // Padding inferior
+            pb: 4 
         }}
       >
         <Container sx={{ py: 4 }}>
@@ -78,7 +75,7 @@ export default function ListadoHabitaciones() {
               <Typography variant="subtitle1" sx={{ ml: 2 }}>Cargando habitaciones...</Typography>
             </Grid>
           ) : (
-            // 💡 CORRECCIÓN GRID V2: Usamos 'display: grid', 'gridTemplateColumns', y 'gap'.
+        
             <Grid
               sx={{
                 display: 'grid',
@@ -89,15 +86,13 @@ export default function ListadoHabitaciones() {
                   sm: 'repeat(2, 1fr)',  // Tablet: 2 columnas
                   md: 'repeat(3, 1fr)',  // Escritorio: 3 columnas (tamaño consistente)
                 },
-                gap: 3, // Espaciado entre las tarjetas
+                gap: 3, 
                 alignItems: 'stretch', // Fuerza a que todas las tarjetas tengan la misma altura
               }}
             >
               {habitaciones.length > 0 ? (
                   habitaciones.map((habitacion) => {
                     return (
-                      /* 💡 CORRECCIÓN V2: TarjetaHabitacion es ahora un hijo directo, 
-                         sin envolver en <Grid item> ni usar props de ancho. */
                       <TarjetaHabitacion
                           key={habitacion.id}
                           habitacion={habitacion}

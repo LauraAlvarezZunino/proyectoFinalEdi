@@ -5,11 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+ // const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    // No need to navigate here since logout() already navigates to '/auth'
   };
 
   return (

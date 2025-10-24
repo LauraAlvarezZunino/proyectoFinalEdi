@@ -7,7 +7,7 @@ const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false,
   const [habitaciones, setHabitaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
 
-  // Fetch real data from API
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -76,8 +76,6 @@ const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false,
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-
-    // También llamar a onChange si está definido (para compatibilidad)
     if (onChange) {
       onChange(e);
     }
@@ -171,11 +169,11 @@ const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false,
             sx: {
               backgroundColor: 'white',
               px: 1,
-              transform: 'translate(14px, -6px) scale(0.75)' // Better positioning
+              transform: 'translate(14px, -6px) scale(0.75)' 
             }
           }}
           inputProps={{
-            min: new Date().toISOString().split('T')[0] // Prevent past dates
+            min: new Date().toISOString().split('T')[0] // fechas pasadas
           }}
           sx={{
             '& .MuiInputBase-root': {
@@ -208,7 +206,7 @@ const FormularioReserva = ({ habitacion, reserva = {}, onChange, isEdit = false,
             sx: {
               backgroundColor: 'white',
               px: 1,
-              transform: 'translate(14px, -6px) scale(0.75)' // Better positioning
+              transform: 'translate(14px, -6px) scale(0.75)' 
             }
           }}
           inputProps={{

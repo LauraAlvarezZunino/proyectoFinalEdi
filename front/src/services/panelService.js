@@ -1,8 +1,4 @@
-// src/services/dashboardService.js
-
 import api from '../services/api';
-
-// Mapeo de colores/iconos para que el servicio pueda devolver el objeto completo
 const baseStatTemplate = {
     totalRooms: { title: 'Habitaciones Totales', icon: 'HotelIcon', color: '#90caf9' },
     activeReservations: { title: 'Reservas Activas', icon: 'EventNoteIcon', color: '#f48fb1' },
@@ -20,13 +16,11 @@ export const fetchDashboardStats = async (userId, isAdmin) => {
         let response;
 
         if (isAdmin) {
-            // ⚠️ Recomendación: Crear un endpoint único para el dashboard de Admin
             const endpoint = '/dashboard/admin';
             response = await api.get(endpoint);
 
             let adminData = response.data;
 
-            // Handle the "re" prefix issue from backend
             if (typeof adminData === 'string' && adminData.startsWith('re')) {
                 adminData = adminData.substring(2);
                 try {
@@ -37,9 +31,6 @@ export const fetchDashboardStats = async (userId, isAdmin) => {
                 }
             }
 
-            // Ejemplo de la data que esperas del backend:
-            // { habitaciones: 50, reservasActivas: 15, usuarios: 200, notificaciones: 5 }
-            
             // Mapeamos y formateamos para el componente
             return [
                 { ...baseStatTemplate.totalRooms, value: String(adminData.habitaciones || 0) },
@@ -49,13 +40,12 @@ export const fetchDashboardStats = async (userId, isAdmin) => {
             ];
 
         } else {
-            // ⚠️ Recomendación: Crear un endpoint único para el dashboard de Usuario
+        
             const endpoint = `/dashboard/user/${userId}`;
             response = await api.get(endpoint);
 
             let userData = response.data;
 
-            // Handle the "re" prefix issue from backend
             if (typeof userData === 'string' && userData.startsWith('re')) {
                 userData = userData.substring(2);
                 try {
@@ -66,7 +56,7 @@ export const fetchDashboardStats = async (userId, isAdmin) => {
                 }
             }
 
-            // Ejemplo de la data que esperas del backend:
+       
             // { misReservas: 3, activas: 1 }
 
             // Mapeamos y formateamos para el componente
@@ -82,7 +72,3 @@ export const fetchDashboardStats = async (userId, isAdmin) => {
         throw new Error('No se pudieron cargar las estadísticas del panel.');
     }
 };
-
-// NOTA: Si no tienes endpoints únicos, tendrías que hacer múltiples llamadas 
-// (ej: api.get('/habitaciones'), api.get('/reservas/activas'), etc.) 
-// y combinar la data aquí, antes de devolverla.

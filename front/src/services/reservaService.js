@@ -1,7 +1,3 @@
-// src/services/reservaService.js (crear o modificar)
-
-// Usaremos 'api' que asumo es una instancia de Axios o un wrapper de fetch con configuración base.
-// Asegúrate de que esta instancia ya maneje las cabeceras como la autenticación.
 import api from '../services/api'; 
 
 const RESERVAS_ENDPOINT = '/reservas';
@@ -22,7 +18,7 @@ export const fetchReservations = async (userId, isAdmin) => {
 
         let data = response.data;
 
-        // Handle the "re" prefix issue from backend
+        // manejo prefijo re del backend
         if (typeof data === 'string' && data.startsWith('re')) {
             data = data.substring(2);
             try {
@@ -34,7 +30,6 @@ export const fetchReservations = async (userId, isAdmin) => {
         }
 
         console.log('Raw response data:', data);
-        // Devolvemos la data que asumimos que es un array de reservas
         return data;
     } catch (error) {
         console.error("Error fetching reservations:", error);
@@ -42,12 +37,10 @@ export const fetchReservations = async (userId, isAdmin) => {
     }
 };
 
-/**
- * Crea una nueva reserva.
- */
+
 export const createReservation = async (reservationData) => {
     try {
-        // Convert snake_case to camelCase to match backend expectations
+    
         const dataToSend = {
             fechaInicio: reservationData.fecha_inicio || reservationData.fechaInicio,
             fechaFin: reservationData.fecha_fin || reservationData.fechaFin,
@@ -60,7 +53,7 @@ export const createReservation = async (reservationData) => {
 
         let data = response.data;
 
-        // Handle the "re" prefix issue from backend
+        // manejo de prefijo re de back
         if (typeof data === 'string' && data.startsWith('re')) {
             data = data.substring(2);
             try {
@@ -81,13 +74,10 @@ export const createReservation = async (reservationData) => {
     }
 };
 
-/**
- * Actualiza una reserva existente.
- */
+
 export const updateReservation = async (id, reservationData) => {
     try {
         const response = await api.put(`${RESERVAS_ENDPOINT}/${id}`, reservationData);
-        // PUTs a menudo devuelven 204 (No Content), asumiremos que el backend devuelve algo o lo manejamos
         return response.data; 
     } catch (error) {
         console.error("Error updating reservation:", error);
@@ -95,13 +85,9 @@ export const updateReservation = async (id, reservationData) => {
     }
 };
 
-/**
- * Cancela (elimina) una reserva.
- */
+
 export const cancelReservation = async (id) => {
     try {
-        // En muchos sistemas, cancelar es un PATCH o PUT para cambiar el estado, 
-        // pero seguiremos la lógica DELETE de tu código original.
         await api.delete(`${RESERVAS_ENDPOINT}/${id}`); 
         return { message: 'Reserva cancelada exitosamente.' };
     } catch (error) {

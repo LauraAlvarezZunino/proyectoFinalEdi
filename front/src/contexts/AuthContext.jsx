@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Importar el nuevo servicio
 import * as authService from '../services/authService';
 // api ya no se necesita directamente, solo se usa en authService
 // import api from '../servicios/api';
@@ -15,13 +14,12 @@ export const useAuth = () => {
   return context;
 };
 
-// Export the provider as default for Fast Refresh compatibility
+//si existe una sesión de usuario guardada en el navegador,restaurarla en el estado de React al recargar
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Mover la lógica de restauración a una función para claridad
   const restoreSession = useCallback(() => {
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('userData');
@@ -70,14 +68,13 @@ const AuthProvider = ({ children }) => {
       // 2. Almacenamiento y Estado
       localStorage.setItem('authToken', token);
       localStorage.setItem('userData', JSON.stringify(userData));
-      localStorage.setItem('userId', userData.id.toString()); // Guardar userId por separado
+      localStorage.setItem('userId', userData.id.toString());
       setUser(userData);
 
       setLoading(false);
       return { success: true };
     } catch (error) {
       setLoading(false);
-      // El error ya viene limpio desde authService.js
       return { success: false, error: error.message }; 
     }
   };
@@ -86,8 +83,6 @@ const AuthProvider = ({ children }) => {
     try {
       // Llamada directa al servicio
       await authService.registerUser(userData);
-      // Nota: Si el registro inicia sesión automáticamente, 
-      // llama a login() aquí o modifica el servicio para devolver token/user.
       return { success: true };
     } catch (error) {
       // El error ya viene limpio desde authService.js
@@ -103,7 +98,6 @@ const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     loading,
-    // La propiedad esAdmin es una derivada del estado del usuario, clara y concisa.
     isAdmin: user?.esAdmin || false,
   };
 

@@ -2,12 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   AppBar, Toolbar, Typography, Button, Container, Card, CardContent,
-  CircularProgress, Grid, Alert, Snackbar, Box // Importado Box para centrar
+  CircularProgress, Grid, Alert, Snackbar, Box 
 } from '@mui/material';
 
 import dayjs from 'dayjs'; 
-
-// Importar servicios (asumiendo que los creaste)
 import * as habitacionService from '../services/habitacionService';
 import * as reservaService from '../services/reservaService';
 
@@ -22,12 +20,11 @@ export default function DetalleHabitacion() {
   const [errorCarga, establecerErrorCarga] = useState(null);
   const [reservaExitosa, establecerReservaExitosa] = useState(false);
 
-  // --- Lógica de la API: GET Detalle ---
+
   const fetchDetalle = useCallback(async () => {
     establecerEstadoCarga(true);
     establecerErrorCarga(null);
     try {
-      // 1. Llamada al servicio
       const data = await habitacionService.fetchRoomDetail(id);
       establecerHabitacion(data);
     } catch (error) {
@@ -42,12 +39,10 @@ export default function DetalleHabitacion() {
     fetchDetalle();
   }, [fetchDetalle]);
 
-  // --- Lógica de la API: POST Reserva (Simplificada y robusta) ---
   const manejarReserva = async (datosReserva) => {
     console.log('Datos de reserva recibidos:', datosReserva);
     establecerErrorCarga(null); // Limpiar errores anteriores
 
-    // Obtener userId del localStorage (debería estar guardado después del login)
     const userId = localStorage.getItem('userId');
     console.log('UserId from localStorage:', userId);
     if (!userId) {
@@ -61,7 +56,7 @@ export default function DetalleHabitacion() {
       return;
     }
 
-    // Cálculo de costo usando dayjs (más ligero que moment)
+    // Cálculo de costo usando dayjs 
     const precioPorNoche = habitacion.precio || habitacion.precioNoche;
     const fecha_inicio = dayjs(datosReserva.fechaInicio);
     const fecha_fin = dayjs(datosReserva.fechaFin);
@@ -79,8 +74,7 @@ export default function DetalleHabitacion() {
       establecerErrorCarga('Precio de habitación no válido.');
       return;
     }
-
-    // Validate that end date is after start date
+    //ver fechas solapadas
     if (fecha_fin.isBefore(fecha_inicio) || fecha_fin.isSame(fecha_inicio)) {
       establecerErrorCarga('La fecha de fin debe ser posterior a la fecha de inicio.');
       return;
@@ -89,7 +83,7 @@ export default function DetalleHabitacion() {
     const costoTotal = precioPorNoche * duracion;
 
     const datosFinales = {
-        fechaInicio: fecha_inicio.format('YYYY-MM-DD'), // Formato estándar para API
+        fechaInicio: fecha_inicio.format('YYYY-MM-DD'), 
         fechaFin: fecha_fin.format('YYYY-MM-DD'),
         habitacionId: parseInt(habitacion.id), // Usar el ID del estado habitacion
         usuarioId: parseInt(userId),
@@ -119,7 +113,7 @@ export default function DetalleHabitacion() {
       return;
     }
     establecerReservaExitosa(false);
-    navigate('/'); // Navegar a la página principal tras el éxito
+    navigate('/'); 
   };
 
   // --- Renderizado de Carga y Error ---
@@ -161,7 +155,6 @@ export default function DetalleHabitacion() {
                       Reserva esta Habitación
                     </Typography>
                     <FormularioReserva
-                        // Corregido: pasar la habitación completa como prop 'habitacion'
                         habitacion={habitacion}
                         alConfirmarReserva={manejarReserva}
                     />

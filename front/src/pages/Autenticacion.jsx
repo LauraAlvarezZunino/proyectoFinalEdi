@@ -3,7 +3,6 @@ import {
   Container, Box, Card, CardContent, Alert
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
 import { useAuth } from '../contexts/AuthContext';
 import FormularioRegistro from '../components/FormularioRegistro';
 import FormularioLogin from '../components/FormularioLogin';
@@ -29,17 +28,14 @@ export default function Autenticacion() {
   const { login, register } = useAuth();
 
 
-  // 1. Unificar el manejo de inputs
   const manejarCambioInput = (e) => {
     const { name, value } = e.target;
     establecerFormData(prev => ({ ...prev, [name]: value }));
   };
-  
-  // 2. Validación de campos (Ahora devuelve el mensaje de error si existe)
+ 
   const validarCampos = () => {
     const { email, password, nombreApellido, dni, telefono } = formData;
 
-    // Validación de campos generales
     if (!email || !password) {
         return 'El email y la contraseña son obligatorios.';
     }
@@ -75,7 +71,6 @@ export default function Autenticacion() {
 
     try {
       let result;
-      
       if (esRegistro) {
         // Mapeo de datos para el backend
         const backendData = {
@@ -92,23 +87,22 @@ export default function Autenticacion() {
           establecerErrorAuth('¡Registro exitoso! Ya puedes iniciar sesión.');
           establecerEsRegistro(false);
           establecerFormData(prev => ({ ...initialFormState, email: prev.email }));
-          establecerCargando(false); // Reset loading state after successful registration
+          establecerCargando(false); 
         } else {
           establecerErrorAuth(result.error || 'Error al registrar.');
-          establecerCargando(false); // Reset loading state after failed registration
+          establecerCargando(false); 
         }
       } else {
         // Login usa email y password (clave)
         result = await login(formData.email, formData.password);
         
         if (result.success) {
-          // Navegar a la página principal después del login exitoso
           navigate('/'); 
         } else {
           console.log('Login failed with error:', result.error);
           establecerErrorAuth(result.error || 'Usuario o contraseña incorrectos.');
           establecerCargando(false); // Asegurar que se quite el estado de carga
-          return; // Importante: salir aquí para evitar continuar con el flujo de éxito
+          return; // Importante: salir para evitar continuar con el flujo de éxito
         }
       }
     } catch (error) {
@@ -184,7 +178,6 @@ export default function Autenticacion() {
                 </Alert>
               )}
 
-              {/* 🛑 CORRECCIÓN: Se eliminó la prop validarCampos para evitar el TypeError. */}
               <BotonSubmit
                 cargando={cargando}
                 esRegistro={esRegistro}

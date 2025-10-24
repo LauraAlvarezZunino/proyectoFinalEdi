@@ -54,18 +54,17 @@ function AppContent() {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Definir si la ruta actual es una página que no necesita el Header/Sidebar (el "chrome")
+  // Definir si la ruta actual es una página que no necesita el Header/Sidebar
   const isPublicPage =
     location.pathname === '/auth' ||
-    location.pathname === '/catalogo' ||
+    location.pathname === '/catalogo' || //sacarr???
     location.pathname.startsWith('/habitacion/');
   
   // Mostrar Header y Sidebar solo si está autenticado Y no está en una página pública
   const showChrome = user && !isPublicPage;
 
-  // Si la aplicación está cargando la sesión inicial, podemos mostrar un spinner o null
+  
   if (loading) {
-      // Opcional: mostrar un spinner global
       return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Cargando aplicación...</Box>;
   }
 
